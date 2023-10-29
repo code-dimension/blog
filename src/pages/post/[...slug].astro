@@ -50,10 +50,14 @@ const { Content, headings, remarkPluginFrontmatter } = await post.render()
 			</div>
 
 			<!-- related posts -->
-			<footer>
-				<h2 class='font-bold text-lg dark:text-white mb-6'>Related Posts</h2>
-				<ListRelatedPosts posts={relatedPosts} />
-			</footer>
+			{
+				relatedPosts.length > 0 && (
+					<footer>
+						<h2 class='font-bold text-lg dark:text-white mb-6'>Posts Relacionados</h2>
+						<ListRelatedPosts posts={relatedPosts} />
+					</footer>
+				)
+			}
 		</article>
 	</div>
 </BlogPost>
