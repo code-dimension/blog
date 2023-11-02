@@ -6,7 +6,6 @@ type Heading = {
 	depth: number
 	text: string
 	slug: string
-	subheadings: Heading[]
 }
 
 export interface Props {
@@ -23,7 +22,7 @@ export interface Props {
 	>
 		{heading.text}
 	</a>
-	{
+	<!-- {
 		heading.subheadings.length > 0 && (
 			<ul class='ml-3'>
 				{heading.subheadings.map((subheading) => (
@@ -31,5 +30,5 @@ export interface Props {
 				))}
 			</ul>
 		)
-	}
+	} -->
 </li>

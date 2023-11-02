@@ -1,2 +1,2 @@
 // List of categories for blog posts
-export const CATEGORIES = [''] as const
+export const CATEGORIES = ['Angular'] as const

@@ -5,7 +5,6 @@ import Search from '@/components/Search'
 import TagIcon from './icons/TagIcon.astro'
 import ToggleTheme from './ToggleTheme.astro'
 import ExternalIcon from './icons/ExternalIcon.astro'
-import Logo from '../assets/images/cd-logo.svg'
 import { Image } from 'astro:assets'
 
 // ADD YOUR SOCIAL NETWORKS HERE
@@ -20,7 +19,7 @@ const SOCIALNETWORKS = [
 
 <header class='relative flex items-center h-12 font-semibold'>
 	<a class='text-lg mr-auto' href='/'>
-		<Image src={Logo} width={50} alt='' />
+		<img src='/images/cd-logo.svg' width={50} alt='' />
 	</a>
 
 	<div
