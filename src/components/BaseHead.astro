@@ -57,3 +57,15 @@ const siteTitle = `${title} ${titleSeparator} ${siteConfig.title}`
 
 <!-- RSS auto-discovery -->
 <link rel='alternate' type='application/rss+xml' title={siteConfig.title} href='/rss.xml' />
+
+<!-- Google tag (gtag.js) -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=G-FEZPK987MW'></script>
+<script is:inline>
+	window.dataLayer = window.dataLayer || []
+	function gtag() {
+		dataLayer.push(arguments)
+	}
+	gtag('js', new Date())
+
+	gtag('config', 'G-FEZPK987MW')
+</script>
