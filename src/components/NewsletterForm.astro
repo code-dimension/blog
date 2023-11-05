@@ -1,0 +1,28 @@
+<div class='flex flex-col items-center justify-center w-full py-12'>
+	<p class='text-xl text-center'>
+		Assine nossa Newsletter e receba os últimos posts e novidades da <strong>Code Dimension</strong
+		>!
+	</p>
+
+	<div class='mt-12' id='custom-substack-embed'></div>
+</div>
+
+<script>
+	;(window as any).CustomSubstackWidget = {
+		element: '#custom-substack-embed',
+		substackUrl: 'codedimension.substack.com',
+		placeholder: 'Digite seu e-mail',
+		buttonText: 'Assinar Newsletter',
+		theme: 'custom',
+		colors: {
+			primary: 'rgba(51,64,71,0.4)',
+			input: '#111518',
+			email: '#FFFFFF',
+			text: '#FFFFFF'
+		}
+	}
+
+	const scriptEl = document.createElement('script')
+	scriptEl.src = 'https://substackapi.com/widget.js'
+	document.body.appendChild(scriptEl)
+</script>
