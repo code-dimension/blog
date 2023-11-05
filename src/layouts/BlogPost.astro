@@ -1,11 +1,9 @@
 ---
 import type { CollectionEntry } from 'astro:content'
 import FormattedDate from '@/components/FormattedDate'
-import Author from '@/components/Author'
 import BaseLayout from '@/layouts/BaseLayout'
 import Tag from '@/components/Tag'
 import type { MarkdownHeading } from 'astro'
-import { Image } from 'astro:assets'
 
 type Props = {
 	data: CollectionEntry<'blog'>['data']
@@ -60,10 +58,6 @@ const articleDate = pubDate.toISOString()
 
 		<div>
 			<slot />
-		</div>
-
-		<div class='flex justify-center py-12'>
-			<Author />
 		</div>
 	</article>
 
