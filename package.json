@@ -22,7 +22,7 @@
 	"scripts": {
 		"dev": "tinacms dev -c 'astro dev'",
 		"start": "astro dev",
-		"build": "tinacms build && astro build",
+		"build": "astro build",
 		"sync": "astro sync",
 		"preview": "astro preview",
 		"postbuild": "pagefind --site dist",
