@@ -82,28 +82,8 @@ Veja no código abaixo, como utilizar a função **effect** na prática.
 
 Lembrando que a função **effect** precisa ser usada dentro de um **Injection Context**, ou seja, dentro um construtor ou diretamente na crição de uma propriedade da classe.
 
-Signals realmente é um recurso muito massa, e garanto que essa adição ao Angular vai trazer muitos benefícios para toda a comunidade e seus projetos.
-
 #### Por hoje é isso!
 
-Não se esqueça de se inscrever na Code Dimension! Somos uma comunidade que tem o foco em trazer conteúdo relevante e de muita qualidade para Designers e Desenvolvedores.
+Signals realmente é um recurso muito massa, e garanto que essa adição ao Angular vai trazer muitos benefícios para toda a comunidade e seus projetos.
 
-Segue os links para você não perder nada :)
-
-Nossa Newsletter 👇👇  
-[https://codedimension.substack.com](https://codedimension.substack.com)
-
-Participe do nosso servidor Discord 👇👾  
-[https://discord.gg/VFNmgxEHXF](https://discord.gg/VFNmgxEHXF)
-
-Escute o Podimension, o podcast da Code Dimension 🗣👇
-
-- [Spotify](https://t.ly/BnBJm)
-- [Google Podcasts](https://t.ly/K7IJ2)
-- [Amazon Music](https://t.ly/sWLB4)
-
-Acesse nosso website 💜👇  
-[https://codedimension.com.br/](https://codedimension.com.br/)
-
-Nos siga no LinkedIn 🤓👇  
-[https://www.linkedin.com/company/code-dimension/](https://www.linkedin.com/company/code-dimension/)
+Espero que você tenha gostado do conteúdo! Até a próxima :)
