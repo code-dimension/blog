@@ -1,0 +1,266 @@
+---
+heroImage: /src/assets/images/control-flow-syntax-cover.png
+category: Angular
+description: >-
+  Angular 17  está trazendo a nova Control Flow Syntax que promete revolucionar
+  a forma como você pode escrever aplicações Front-End!
+pubDate: 2023-11-13T03:00:00.000Z
+draft: false
+tags:
+  - angular
+title: 'Angular 17: Conheça a nova Control Flow Syntax'
+---
+
+Angular 17 está trazendo muitas novidades para o framework que prometem revolucionar a forma como você pode escrever aplicações Front-End!
+
+E uma das novidades mais interessantes dessa nova versão se chama **Control Flow Syntax**.
+
+Nesse artigo você vai entender da onde veio, por que existe e como essa nova sintaxe
+
+<SButton>qwdwqdqw dqwd qdwqdw</SButton>
+
+melhorará seus projetos Angular.
+
+\<iframe width="560" height="315" src="https\://www\.youtube.com/embed/bP_Aqc6HQtY?si=OtCTc4kfZK2GRrzr" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>\</iframe>
+
+## Mas o que é Control Flow Syntax?
+
+Com o passar dos anos e novas tecnologias surgindo no mercado (como Svelte), maneiras mais eficientes e, também, mais simples de escrever o template dos componentes foram criadas.
+
+O time que mantém o [Angular](https://angular.dev) resolveu então modernizar e aprimorar como os templates são escritos hoje. Assim, uma nova sintaxe começou a ser criada, que seria chamada de **Control Flow Syntax**.
+
+Duas RFCs (Request For Comments) no repositório oficial do [Angular](https://angular.dev) foram criadas para que a comunidade opinasse em relação a essa nova funcionalidade.
+
+E como você já deve imaginar, a comunidade opinou muuito.
+
+> Veja as RFCs nos links abaixo \
+> \
+> [\[Complete\] RFC: Built-In Control Flow](https://github.com/angular/angular/discussions/50719)\
+> [\[Summary\] Control Flow & Deferred Loading](https://github.com/angular/angular/discussions/51241)
+
+A ideia inicial era trazer uma sintaxe muito próxima ao que o Svelte tem, que inclusive foi chamada de "# syntax".
+
+O código abaixo mostra como essa sintaxe funcionaria.
+
+```javascript
+{#if cond.expr }
+  Main case was true!
+{:else if other.expr}
+  Extra case was true!
+{:else }
+  False case !
+  {/if}
+```
+
+No geral a comunidade não gostou muito da ideia, principalmente por essa sintaxe ser muito verbosa e lembrar também o antigo [Handlebars](https://handlebarsjs.com).
+
+Sugestões surgiram, e uma delas que, inclusive foi a escolhida, se chamava "@ syntax".
+
+Bem sujestivo né?
+
+Essa sintaxe (@ syntax) era mais inspirada no universo .NET, mais especificamente na Template Engine chamada [Razor](https://learn.microsoft.com/pt-br/aspnet/core/razor-pages/?view=aspnetcore-7.0&tabs=visual-studio).
+
+O código abaixo mostra como essa sintaxe funcionaria.
+
+```javascript
+@if showBody {
+  <body-cmp />
+} @else if showSummary {
+  <summary-cmp />
+} @else {
+  Nothing to see here...
+}
+```
+
+Talvez por ser menos verbosa e mais fácil de entender, a comunidade abraçou melhor essa forma de escrever a nova Control Flow Syntax.
+
+Pois bem, vamos agora entender o que mudou com essa nova sintaxe e como isso afeta seus projetos.
+
+## A nova sintaxe @
+
+Basicamente três novos operadores foram criados para substituir ao poucos as diretivas estruturais que temos hoje (NgIf, NgFor, NgSwitch).
+
+Esses operadores são:
+
+- @if
+- @for
+- @switch
+
+Essa substituição citada acima será feita em fases, o que significa que essa nova sintaxe não quebrará os projetos quando uma migração acontecer. Nessa nova versão do Angular, todas as diretivas estruturais funcionam normalmente.
+
+Agora, vamos desbravar cada uma delas em detalhes!
+
+## Operador @if
+
+Esse operador, como você já deve imaginar, é utilizado para declarar uma condição do tipo `if`. A ideia é ter um bloco condicional mais declarativo que simplefique como condições do tipo `if / else` são feitas hoje.
+
+Código abaixo exemplifica bem como esse novo operador funciona:
+
+```javascript
+@if (inputControl.value !== '') {
+  // some code
+} @else if (inputControl.value !== 'some-value') {
+  // some code
+} @else {
+  // some code
+}
+```
+
+Note que agora existe também operadores para `@else if` e `@else` que tornam o código bem mais legível.
+
+Caso você esteja se perguntando "E como faço para usar o @if com um Observable?", aqui vai um exemplo bem simples de como fazer.
+
+```javascript
+@if (users$ | async; as users) {
+  {{ users.length } }
+}
+```
+
+## Operador @for
+
+Muito útil para renderizar elementos em loop. O operador @for traz mais organização e performance para seu código.
+
+O código abaixo mostra como utilizar o mesmo.
+
+```javascript
+@for (item of searchResults$ | async; track item; let index = $index) {
+    <div>{{ index + 1}} - {{ item }}</div>
+} @empty {
+  <strong>No items found</strong>
+}
+```
+
+Algumas coisas nessa nova sintaxe são muito importantes destacar:
+
+#### Track
+
+##### Track é obrigatório ser informado sempre o @for ser utilizado.
+
+##### Essa abordagem traz mais performance para o gerenciamento de elementos renderizados dentro de um loop, fazendo com que o Angular consiga identificar quais elementos mudaram com muito mais eficiência.
+
+Note também que não é mais necessário informar uma função para que o track funcione, o próprio Angular já faz isso por você - só necessário passar um valor que nunca mude (como um id) para o track.
+
+#### Variáveis
+
+Váriaveis relativas ao loop podem ser acessadas da seguinte forma let index = $index. Existem várias que você pode usar e, caso esteja curioso para saber quais, [a documentação oficial do Angular mostra todas as variáveis disponívels.](https://angular.dev/guide/templates/control-flow#index-and-other-contextual-variables)
+
+#### Bloco @empty
+
+O bloco @empty permite renderizar um bloco de código (HTML, componentes Angular) quando o Array passado para o loop ser vazio. Ou seja, sem nenhuma posição no mesmo.
+
+Essa é talvez a funcionalidade mais relevante do @for , pois até então era necessário fazer condicionais como searchResults.length > 0 para decidir que tipo de conteúdo seria renderizado.
+
+## Operador @switch
+
+Muito inspirado na instrução switch do Javascript, esse operador permite declarar várias condições de forma mais estruturada (geralmente mais estrutura que @if / @else).
+
+```javascript
+@switch (condition) {
+  @case (caseA) {
+    Case A.
+  }
+  @case (caseB) {
+    Case B.
+  }
+  @default {
+    Default case.
+  }
+}
+```
+
+## Todos os projetos existentes vão quebrar?
+
+Essa pergunta provavelmente está e vai ecoar na mente de muitas pessoas por um bom tempo.
+
+A comunidade recebeu com muita estranhaza a nova **Control Flow Syntax**. E isso tem muita relação com a necessidade de mudança e talvez mais uma possível grande quebra nos projetos existentes (como aconteceu com Angular 2).
+
+A verdade é que nenhuma grande quebra irá acontecer, pois o Angular está muito maduro, com uma arquitetura muito flexível e recursos que permitem fazer migrações com muita facilidade.
+
+Inclusive junto com o Angular 17, um novo schematics foi lançado para facilitar a migração para a nova **Control Flow Syntax** em projetos existentes.
+
+É só executar o comando abaixo no seu terminal.
+
+```javascript
+ng generate @angular/core:control-flow
+```
+
+Depois de todos os animos sendo acalmados, é hora de comparar um código escrito da forma antiga (com NgIf eNgFor) e outro escrito da forma nova (com @if e @for)!
+
+## Comparando a verbosidade dos templates
+
+Nada como uma boa comparação para entender como um recurso realmente melhora algo que não estava tão bom.
+
+Nos códigos abaixo será mostrado dois templates, um escrito com as diretivas estruturais (NgIf e NgFor) e outro escrito a nova **Control Flow Syntax**.
+
+Note que ambos os templates **renderizam exatamente a mesma coisa!**
+
+Código usando apenas **diretivas estruturais**:
+
+```html
+<input id="search" type="text" [formControl]="inputControl" placeholder="Search a language" />
+
+<ng-container *ngIf="inputControl.value !== ''; else inputControlWithoutValueTemplate" ;>
+	<h3>Search Results</h3>
+
+	<ng-container *ngIf="searchResults$ | async as searchResults">
+		<ng-container *ngIf="searchResults.length > 0; else noItemsFoundTemplate">
+			<ng-container
+				*ngFor="let item of searchResults$ | async; trackBy: trackBy; let index = index;"
+			>
+				<div>{{ index + 1 }} - {{ item }}</div>
+			</ng-container>
+		</ng-container>
+
+		<ng-template #noItemsFoundTemplate>
+			<strong>No items found</strong>
+		</ng-template>
+	</ng-container>
+</ng-container>
+
+<ng-template #inputControlWithoutValueTemplate>
+	<h3>Searchs results will be shown here :)</h3>
+</ng-template>
+
+<h3>All Available Languages</h3>
+
+<ng-container *ngFor="let item of languages; trackBy: trackBy; let index = index">
+	<div>{{ index + 1 }} - {{ item }}</div>
+</ng-container>
+```
+
+Código usando a nova **Control Flow Syntax**:
+
+```razor
+<input id="search" type="text" [formControl]="inputControl" placeholder="Search a language">
+
+@if(inputControl.value !== '') {
+  <h3>Search Results</h3>
+
+  @for (item of searchResults$ | async; track item; let index = $index) {
+    <div>{{ index + 1 }} - {{ item }}</div>
+  } @empty {
+    <strong>No items found</strong>
+  }
+
+} @else {
+  <h3>Search results will be shown here :)</h3>
+}
+
+<h3>All Available Languages</h3>
+
+@for (item of languages; track item; let index = $index) {
+  <div>{{ index + 1 }} - {{ item }}</div>
+}
+```
+
+A diferença é absurda! Muito menos código escrito e o template está muito mais simples de entender.
+
+A nova sintaxe traz muitas melhorias para performance, mas também para experiência de desenvolvimento que, no Angular, muitas vezes foi deixada de lado em versões passadas.
+
+## Conclusão
+
+**Control Flow Syntax** veio com tudo e com certeza irá trazer muitas melhorias para o processo de renderização e também para como os templates são escritos hoje.
+
+O futuro com esse novo recurso é brilhante! Muita coisa ainda irá surgir com essa nova funcionalidade.
+
+Obrigado por ler até aqui e até mais! :)
