@@ -8,13 +8,25 @@ module.exports = {
 		extend: {
 			colors: {
 				white: '#f8f9fa',
-				primary:'#6657ec'
+				primary: '#6657ec'
 			},
 			fontFamily: {
 				body: ['Manrope', ...defaultTheme.fontFamily.sans]
 			},
 			gridTemplateColumns: {
 				list: 'repeat(auto-fill, minmax(400px, max-content))'
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						// remove the quotes ("")
+						blockquote: {
+							'p:before, p:after': {
+								content: 'none'
+							}
+						}
+					}
+				}
 			}
 		}
 	},
