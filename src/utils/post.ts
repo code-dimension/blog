@@ -9,7 +9,7 @@ export const getCategories = async () => {
 export const getPosts = async (max?: number) => {
 	return (await getCollection('blog'))
 		.filter((post) => !post.data.draft)
-		.sort((a, b) => a.data.pubDate.getMilliseconds() - b.data.pubDate.getMilliseconds())
+		.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
 		.slice(0, max)
 }
 
