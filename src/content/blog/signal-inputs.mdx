@@ -1,0 +1,64 @@
+---
+heroImage: /images/posts/control-flow-syntax-cover.png
+category: Angular
+description: >-
+  Angular 17  está trazendo a nova Control Flow Syntax que promete revolucionar
+  a forma como você pode escrever aplicações Front-End!
+pubDate: '2024-02-05'
+draft: false
+tags:
+  - angular
+title: 'Angular 17.1: Signal Input chegou!'
+---
+
+import EmbedYtVideo from '../../components/embed-yt-video.astro'
+
+Angular 17.1 foi lançada e com essa versão algo muito legal e, também, muito esperado por toda a comunidade finalmente chegou para o framework.
+
+Sim! Estamos falando da funcionalidade chamada **Signal Input**.
+
+Nesse artigo será mostrado a razão dessa funcionalidade existir e como usar a mesma.
+
+> <EmbedYtVideo src='https://www.youtube.com/embed/8t6OGv0EsRM?si=bEWhIA3GH181MUz4' />
+
+## O que é Signal Input?
+
+Essa funcionalidade permite com que usemos a tradicional **Input** dos componentes e diretivas do [Angular](https://angular.dev) de uma forma um pouco diferente da maneira como você provavelmente já conhece.
+
+A ideia é poder receber valores da mesma forma como você já faz hoje, mas com um pequeno adição. O valor recebido vai estar encapsulado dentro de um [Signal](https://angular.dev/guide/signals#writable-signals).
+
+Com essa mudança, o framework consegue se integrar ainda mais com essa nova API de reativade de [Signal](https://angular.dev/guide/signals#writable-signals) e chegar mais próximo da tão sonhada integração completa com, que removerá a necessidade da utilização da biblioteca [ZoneJS](https://github.com/angular/angular/tree/main/packages/zone.js) nas aplicações Front-End.
+
+## O que muda no código?
+
+Apesar de essa adição ao framework não provocar quebras nos projetos existentes, essa nova forma de declarar uma **Input** gera algumas mudanças em como você vai estruturar seu código.
+
+Anteriormente a configuração de uma Input em um componente poderia ser feita da seguinte forma:
+
+```ts
+@Component({
+  ...
+})
+export class NameComponent {
+  @Input() name: string;
+}
+```
+
+Com a chegada de **Signal Input**, o código acima mudou um pouco.
+
+Confira no trecho de código logo abaixo:
+
+```ts
+@Component({
+  ...
+})
+export class NameComponent {
+  name = input<string>();
+}
+```
+
+Notou a diferença?
+
+Não é mais necessário utilizar o decorator **@Input** para declarar uma propriedade como uma **Input**.
+
+Agora a função **input(...)** faz isso por você.
