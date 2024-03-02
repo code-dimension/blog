@@ -27,7 +27,7 @@ Essa funcionalidade permite com que usemos a tradicional **Input** dos component
 
 A ideia é poder receber valores da mesma forma como você já faz hoje, mas com um pequeno adição. O valor recebido vai estar encapsulado dentro de um [Signal](https://angular.dev/guide/signals#writable-signals).
 
-Com essa mudança, o framework consegue se integrar ainda mais com essa nova API de reativade de [Signal](https://angular.dev/guide/signals#writable-signals) e chegar mais próximo da tão sonhada integração completa com, que removerá a necessidade da utilização da biblioteca [ZoneJS](https://github.com/angular/angular/tree/main/packages/zone.js) nas aplicações Front-End.
+Com essa mudança, o framework consegue se integrar ainda mais com essa nova API de reativade de [Signal](https://angular.dev/guide/signals#writable-signals) e chegar mais próximo da tão sonhada integração completa, que removerá a necessidade da utilização da biblioteca [ZoneJS](https://github.com/angular/angular/tree/main/packages/zone.js) nas aplicações Front-End.
 
 ## O que muda no código?
 
@@ -62,3 +62,107 @@ Notou a diferença?
 Não é mais necessário utilizar o decorator **@Input** para declarar uma propriedade como uma **Input**.
 
 Agora a função **input(...)** faz isso por você.
+
+## Como usar a função **_input()_**?
+
+Essa nova função utiliza na verdade a mesmas funcionalidades que o Decorator **@Input**.
+
+Assim, a função **input(...)** traz como melhoria melhor rastreamento de tipos e maior poder de verificação por parte do framework.
+
+Confira a seguir alguma das funcionalidades dessa nova abordagem.
+
+### Aplicando tipagem explícita para uma **_Input_**
+
+Diferente do uso de decorators, através do uso de funções é possível definir explitamente que tipo de valor uma **_Input_** poderá receber.
+
+Por exemplo, no código abaixo a **_Input_** apenas permite receber valores do tipo `string`.
+
+```ts
+export class ExampleComponent {
+	optionalInput = input<string>()
+}
+```
+
+E caso essa tipagem não seja respeitada, um erro por parte do framework é lançado.
+
+No código abaixo é passado um valor do tipo `number` para uma **_Input_** do tipo `string`.
+
+```html
+<example-component [optionalInput]="45" />
+```
+
+O erro que o Angular lançara no terminal será:
+
+```bash
+NG2: Type 'number' is not assignable to type 'string'
+```
+
+### Definindo uma **_Input_** como opcional
+
+A função **_input_** por padrão é opcional, não obrigando com que os componentes ou diretivas passem valores para a mesma.
+
+Veja na linha abaixo como definir uma **_input_** opcional.
+
+```ts
+export class ExampleComponent {
+	optionalInput = input()
+}
+```
+
+É interessante notar que é possível definir um valor padrão para a **_Input_**, que será usado quando nenhum valor ser passado pelo componente pai.
+
+```ts
+export class ExampleComponent {
+	optionalInput = input('default value')
+}
+```
+
+### Definindo uma **_Input_** obrigatória
+
+A possibilidade de definir uma Input obrigatória dentro do Angular já não uma novidade tão recente, mas uma melhoria importante foi adicionada com a função **_input()_**
+
+Agora é possível definir uma Input como obrigatória apenas utilizando o código abaixo:
+
+```ts
+export class ExampleComponent {
+	requiredInput = input.required()
+}
+```
+
+E caso um valor não seja passado para a Input, um erro irá acontecer instanteneamente pelo Angular.
+
+```ts
+[ERROR] NG8008: Required input 'requiredInput' from component ExampleComponent must be specified.
+```
+
+Legal, né?
+
+Ficou bem mais estrita essa verificação.
+
+### Adicionando configurações para uma **_Input_**
+
+A adição de configurações para uma **_Input_** confinua a mesma, apenas mudando como definimos esses dados.
+
+Quando a **_Input_** é obrigatória, as configurações são passadas no primeiro e único parâmetro da função.
+
+```ts
+myRequiredInput = input.required({
+	transform: (v) => v.toUpperCase(),
+	alias: 'fakeName'
+})
+```
+
+Mas quando a função é opcional, configurações são passadas no segundo parâmetro.
+
+```ts
+myInput = input('', {
+	transform: (v) => v.toUpperCase(),
+	alias: 'fakeName'
+})
+```
+
+## Conclusão
+
+**_Signal Inputs_** é uma funcionalidade que marca um passo importante em relação a integração do Angular com Signals.
+
+Essa nova forma de definir **_Inputs_** traz uma melhor experiência de tipagem ao código e também torna o fluxo dos dados mais explícito.
