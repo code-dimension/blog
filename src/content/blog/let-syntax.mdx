@@ -1,0 +1,95 @@
+---
+heroImage: /images/posts/let-cover.png
+category: Angular
+description: Saiba mais sobre o novo operador @let do Angular 18, que traz uma nova forma de definir variáveis dentro de um componente.
+pubDate: '2024-07-15'
+draft: false
+tags:
+  - angular
+title: Conheça o novo operador @let do Angular 18
+---
+
+> Essa é uma transcrição do [artigo oficial do Angular sobre o operador @let](https://blog.angular.dev/introducing-let-in-angular-686f9f383f0f)
+
+A sintaxe de template do Angular está sendo estendida para fornecer aos desenvolvedores uma maneira de definir variáveis dentro de templates de componentes.
+
+A nova sintaxe `@let` permitirá que os desenvolvedores definam uma variável e reutilizem seu valor em todo o template. Esta sintaxe também aborda um dos [problemas mais votados pela comunidade](https://github.com/angular/angular/issues/15280x).
+
+Nesse artigo você vai aprender como utilizar `@let` em seus componentes.
+
+## Definindo variáveis reutilizáveis em templates
+
+A sintaxe de template do Angular suporta expressões JavaScript complexas, mas não havia uma maneira prática de armazenar o resultado de uma expressão e reutilizá-lo no template.
+
+Os desenvolvedores tinham que usar soluções alternativas para atingir esse objetivo com diretivas e outras abordagens.
+
+### Exemplo de sintaxe:
+
+```typescript
+@let nome = valor; // onde valor é uma expressão Angular válida
+```
+
+No template, uma variável pode ser definida e usada conforme as regras da sintaxe de template do Angular. Por exemplo:
+
+```typescript
+@let nome = 'Frodo';
+<h1>Painel de controle para {{nome}}</h1>
+Olá, {{nome}}
+```
+
+Outro exemplo de uso do `@let` em um template:
+
+```html
+<!-- Uso com uma variável de template referenciando um elemento -->
+<input #nome />
+
+@let saudacao = 'Olá ' + nome.value;
+
+<!-- Uso com um pipe assíncrono -->
+@let usuario = usuario$ | async;
+```
+
+As declarações `@let` são limitadas à visualização atual e seus descendentes, mas não podem ser acessadas por visualizações pai ou irmãs.
+
+```typescript
+@let nivelSuperior = valor;
+
+@if (condicao) {
+  @let aninhado = valor;
+}
+
+<div *ngIf="condicao">
+  @let aninhadoNgIf = valor;
+</div>
+```
+
+```html
+<!-- Válido -->
+{{nivelSuperior}}
+<!-- Erro, não promovido de @if -->
+{{aninhado}}
+<!-- Erro, não promovido de *ngIf -->
+{{aninhadoNgIf}}
+```
+
+As declarações `@let` são somente leitura e não podem ser reatribuídas.
+
+Seus valores serão recomputados a cada detecção de mudanças (por exemplo, se um pipe assíncrono mudar). Tentar escrevê-las diretamente resultará em um erro de verificação de tipo.
+
+```typescript
+@let valor = 10;
+
+<!-- Erro: `valor` não é atribuível -->
+<button (click)="valor = valor + 1">Alterar o valor</button>
+```
+
+## Definição de sintaxe
+
+Detalhes da definição de sintaxe para a sintaxe `@let`:
+
+1. A palavra-chave `@let`.
+2. Seguido por um ou mais espaços em branco, excluindo novas linhas.
+3. Seguido por um nome JavaScript válido e zero ou mais espaços em branco.
+4. Seguido pelo símbolo `=` e zero ou mais espaços em branco.
+5. Seguido por uma expressão Angular que pode ser multilinha.
+6. Terminada pelo símbolo `;`.
