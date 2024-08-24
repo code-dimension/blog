@@ -5,16 +5,16 @@ import { cn } from '@/utils'
 
 type Props = {
 	posts: CollectionEntry<'blog'>[]
-	lastestPostBig?: boolean
+	isLastestPostBigger?: boolean
 }
 
-const { posts, lastestPostBig = false } = Astro.props
+const { posts, isLastestPostBigger = false } = Astro.props
 ---
 
 <section
 	class={cn(
 		`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-8 mt-3`,
-		lastestPostBig && `md:[&>*:first-child]:col-span-2`
+		isLastestPostBigger && `md:[&>*:first-child]:col-span-2`
 	)}
 >
 	{

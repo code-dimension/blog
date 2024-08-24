@@ -1,4 +1,4 @@
-import { CATEGORIES } from '../src/data/categories.ts'
+import { SUPPORTED_CATEGORIES } from '../src/data/supported-categories.ts'
 import { defineConfig } from 'tinacms'
 
 // Your hosting provider likely exposes this as an environment variable
@@ -43,7 +43,7 @@ export default defineConfig({
 						name: 'category',
 						label: 'Category',
 						description: 'Select an category for this post',
-						options: [...CATEGORIES]
+						options: [...SUPPORTED_CATEGORIES]
 					},
 					{
 						type: 'string',

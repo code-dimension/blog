@@ -11,6 +11,7 @@ import Author from '@/components/Author'
 import ListPosts from '@/components/ListPosts'
 
 const posts = await getCollection('blog')
+
 export async function getStaticPaths() {
 	const posts = await getPosts()
 
@@ -19,10 +20,13 @@ export async function getStaticPaths() {
 		props: post
 	}))
 }
+
 type Props = CollectionEntry<'blog'>
 
 const post = Astro.props
+
 const MAX_POSTS = 3
+
 const getRelatedPosts = (post: Props) => {
 	const relatedPosts = posts.filter(
 		(p) => p.slug !== post.slug && p.data.tags.some((t) => post.data.tags.includes(t))
@@ -52,7 +56,7 @@ const { Content, headings, remarkPluginFrontmatter } = await post.render()
 			</div>
 
 			<div class='flex justify-center py-12'>
-				<Author />
+				<Author authorId={post.data.authorId} />
 			</div>
 
 			<!-- related posts -->
