@@ -1,24 +1,4 @@
 {
-	"name": "blog-template",
-	"type": "module",
-	"version": "1.1.0",
-	"description": "A template for creating a blog with Astro",
-	"author": "danielcgilibert",
-	"license": "GPL-3.0-only",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/danielcgilibert/blog-template"
-	},
-	"keywords": [
-		"astro",
-		"astrojs",
-		"astro-template",
-		"astro-blog",
-		"astro-b"
-	],
-	"bugs": {
-		"url": "https://github.com/danielcgilibert/blog-template/issues"
-	},
 	"scripts": {
 		"dev": "tinacms dev -c 'astro dev'",
 		"start": "astro dev",
