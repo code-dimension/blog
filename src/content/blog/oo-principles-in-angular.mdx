@@ -1,0 +1,262 @@
+---
+heroImage: /images/posts/bannerImg.png
+category: Angular
+description: >-
+  Este artigo explora como aplicar os princípios da Programação Orientada a Objetos (OO) no desenvolvimento com Angular, oferecendo insights e exemplos práticos.
+pubDate: '2024-08-29'
+draft: false
+tags:
+  - angular
+title: 'Aplicando Princípios de Orientação a Objetos com Angular'
+authorId: 'manuel-afonso'
+---
+
+## Introdução
+
+Minha experiência com a Programação Orientada a Objetos começou no ensino médio, quando tive contato com Java. Naquela época, a OO parecia ser um desafio para muitos de nós. Java, em particular, era visto como complexo devido à forma como a OO era abordada. Eu fazia o possível para evitar ferramentas que utilizavam 100% OO.
+
+Com o tempo, minha perspectiva mudou. Hoje, encaro a Orientação a Objetos de uma forma diferente, reconhecendo seu valor e aplicabilidade. No início da minha carreira, trabalhei bastante com programação funcional, principalmente em frameworks como React. Isso me levou a refletir sobre as vantagens e desvantagens de cada paradigma e como eles podem ser aplicados no desenvolvimento de aplicações modernas.
+
+O que é Programação Orientada a Objetos?
+Antes de nos aprofundarmos na implementação da Programação Orientada a Objetos (POO) no Angular, é importante entender o que é POO e quais são seus pilares fundamentais.
+
+A Programação Orientada a Objetos é um paradigma de programação baseado no conceito de objetos. Ela visa aproximar o mundo real do mundo virtual, tornando o código mais robusto e sustentável. A POO oferece uma série de recursos que ajudam a manter o código modular, reutilizável e fácil de entender.
+
+## Encapsulamento
+
+O encapsulamento é um dos principais conceitos da Programação Orientada a Objetos. Ele permite ocultar os detalhes de implementação de um objeto, mantendo sua funcionalidade acessível e aumentando a segurança do código. No contexto do Angular, o encapsulamento é aplicado por meio da criação de componentes.
+
+No Angular, a separação de HTML, CSS e TypeScript em componentes distintos exemplifica bem o uso do encapsulamento. Isso torna a construção da interface modular e organizada, facilitando a manutenção e a evolução do código.
+
+Exemplo de Encapsulamento no Angular
+Vamos ilustrar o uso do encapsulamento no Angular com um exemplo simples de um sistema de gerenciamento de receitas financeiras. No exemplo a seguir, encapsulamos a lógica, o template e os estilos relacionados ao nosso componente de visão geral financeira:
+
+```javascript
+import { Component } from '@angular/core'
+
+@Component({
+selector: 'app-finance-overview',
+template: `
+
+     Visão geral das Finanças
+
+
+         {{ item.type }}: $ {{ item.amount.toFixed(2) }}
+
+`,
+ styles: [
+   `
+.finance-overview {
+border: 1px solid #ccc;
+padding: 20px;
+border-radius: 8px;
+max-width: 400px;
+margin: auto;
+}
+
+     h2 {
+       color: #2c3e50;
+       text-align: center;
+     }
+
+
+     ul {
+       list-style-type: none;
+       padding: 0;
+     }
+
+
+     li {
+       padding: 10px;
+       background: #f3f3f3;
+       margin-bottom: 8px;
+       border-radius: 4px;
+       font-weight: bold;
+     }
+
+`,
+],
+})
+export class FinanceOverviewComponent {
+financeData: { type: string; amount: number }[] = [
+{ type: 'Receita Total', amount: 7385.0 },
+{ type: 'Despesa Total', amount: 455.0 },
+{ type: 'Saldo Total', amount: 6930.0 },
+];
+}
+```
+
+Neste exemplo, encapsulamos a lógica, o template e os estilos do componente FinanceOverviewComponent dentro de uma única classe. Isso facilita o gerenciamento do código, pois todas as partes relacionadas ao componente estão agrupadas e isoladas.
+
+## Herança em Angular
+
+No contexto do Angular, a herança permite que possamos reutilizar lógica entre componentes. Esse recurso é especialmente útil quando queremos compartilhar funcionalidades entre componentes que possuem semelhanças. Ao invés de duplicar código, podemos criar uma classe base com a lógica comum e, em seguida, estender essa classe em componentes específicos.
+
+Exemplo de Herança no Angular
+Vamos considerar um exemplo prático para ilustrar a herança em Angular. Suponha que temos um componente FinanceOverviewComponent que retorna informações como Receita Total, Despesa Total e Saldo Total. Agora, queremos criar outro componente chamado BalanceComponent, que herda os dados e a lógica de FinanceOverviewComponent.
+
+Aqui um exemplo de como poderíamos implementar isso no angular:
+
+import { Component } from '@angular/core'
+
+```javascript
+@Component({
+selector: 'app-finance-overview',
+templateUrl: './finance-overview.component.html',
+styleUrl: './finance-overview.component.scss',
+})
+export class FinanceOverviewComponent {
+financeData: { type: string; amount: number }[] = [
+{ type: 'Receita Total', amount: 7385.0 },
+{ type: 'Despesa Total', amount: 455.0 },
+{ type: 'Saldo Total', amount: 6930.0 },
+];
+}
+```
+
+A herança é um conceito extremamente útil para reutilizar lógicas em diferentes componentes. No contexto do Angular, isso permite que um componente herde todas as propriedades e métodos de outro, facilitando a manutenção e a consistência do código.
+
+```javascript
+import { Component } from '@angular/core'
+import { FinanceOverviewComponent } from '../finance-overview/finance-overview.component'
+
+@Component({
+selector: 'app-toolbar',
+templateUrl: './toolbar.component.html',
+styleUrl: './toolbar.component.scss',
+})
+export class ToolbarComponent extends FinanceOverviewComponent {
+get balance(): number {
+const saldoTotal = this.financeData.find(
+(data) => data.type === 'Saldo Total'
+);
+return saldoTotal ? saldoTotal.amount : 0;
+}
+}
+```
+
+Embora a herança seja comum em programação orientada a objetos, em Angular não é recomendável utilizá-la em todos os casos. Por isso, sugiro considerar outro conceito muito usado no Angular: a composição. Esse conceito difere da herança em alguns pontos, e no próximo artigo, pretendo abordar exclusivamente o uso da composição no Angular.
+
+Abstração
+Na Programação Orientada a Objetos, a abstração é um conceito fundamental que envolve a simplificação de objetos complexos, representando-os de maneira mais genérica e essencial. No contexto do Angular, a abstração pode ser implementada por meio de interfaces ou classes abstratas, que definem um contrato para outros componentes ou serviços, sem expor os detalhes da implementação.
+
+Vamos a um exemplo prático no Angular para ilustrar como a abstração é usada. Suponha que temos uma classe base que representa uma API. Essa classe não apenas busca uma lista de produtos, mas também recupera dados gerais como receitas, saldos totais e despesas.
+
+```javascript
+import { Injectable } from '@angular/core'
+import { HttpClient, HttpHeaders } from '@angular/common/http'
+import { Observable } from 'rxjs'
+
+@Injectable({
+providedIn: 'root',
+})
+export abstract class ServiceApi {
+protected headers: HttpHeaders;
+
+constructor(protected http: HttpClient) {
+this.headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+}
+
+protected get(url: string): Observable {
+return this.http.get(url, { headers: this.headers });
+}
+
+protected post(url: string, data: any): Observable {
+return this.http.post(url, data, { headers: this.headers });
+}
+}
+```
+
+Aqui, criamos a classe abstrata ServiceApi, que fornece métodos comuns para realizar requisições HTTP. Esta classe serve como base para outros serviços que possam precisar dessas funcionalidades.
+
+Em seguida, vamos criar um serviço específico que herda dessa classe base e a utiliza para interagir com a API de produtos:
+
+```javascript
+import { Injectable } from '@angular/core'
+import { ApiService } from './api.service'
+import { Produto } from '../models/product.model'
+import { Observable } from 'rxjs'
+
+@Injectable({
+providedIn: 'root'
+})
+export class ProductApiService extends ApiService {
+private baseUrl = 'http://example.com/api/products';
+
+getAll(): Observable {
+return this.get(this.baseUrl);
+}
+create(product: Produto): Observable {
+return this.post(this.baseUrl, product);
+}
+}
+```
+
+Nesse exemplo, ProductApiService herda a funcionalidade da classe abstrata ServiceApi, reutilizando métodos para realizar requisições HTTP.
+
+Abstração é um conceito fundamental no Angular, permitindo que programadores isolem a lógica comum em serviços ou componentes base, tornando essa lógica reutilizável em diferentes partes da aplicação.
+
+## Polimorfismo
+
+O polimorfismo é um conceito central na Programação Orientada a Objetos que permite que uma única interface seja usada para representar diferentes tipos de objetos. No Angular, o polimorfismo é frequentemente utilizado em serviços abstratos, herança, e injeção de dependência, permitindo que diferentes implementações sejam intercambiáveis e tratadas de maneira uniforme.
+
+Vamos a um exemplo prático. Suponha que temos um serviço base que define uma interface comum para um grupo de serviços relacionados. Esse serviço base será herdado por outros serviços específicos, que implementarão suas próprias funcionalidades.
+
+```javascript
+import { Injectable } from '@angular/core'
+import { HttpClient } from '@angular/common/http'
+import { ApiService } from './api.service'
+
+@Injectable({
+providedIn: 'root',
+})
+export class RecipeApiService extends ApiService {
+private baseUrl = 'http://localhost:3000/api/recipes';
+constructor(http: HttpClient) {
+super(http);
+}
+get(url: string) {
+return this.http.get(`${this.baseUrl}/${url}`);
+}
+}
+```
+
+Neste exemplo, RecipeApiService estende o serviço base ApiService, mas implementa a funcionalidade específica para buscar receitas. O método get é sobrescrito para adaptar a funcionalidade ao contexto específico de receitas, utilizando a mesma interface definida no serviço base.
+
+Polimorfismo é um conceito fundamental na programação orientada a objetos, que facilita a criação de código modular e reutilizável no Angular. Enquanto a abstração permite a definição de interfaces comuns, o polimorfismo possibilita o uso dessas interfaces de forma flexível e adaptável, permitindo que diferentes componentes e serviços sejam tratados de maneira uniforme.
+
+## Interface
+
+Uma interface é uma maneira de definir contratos que uma classe ou objeto deve implementar. Ela é responsável por especificar as propriedades e métodos que uma classe deve possuir, sem fornecer detalhes sobre como esses métodos devem ser implementados. No Angular, interfaces são amplamente utilizadas para definir a forma de objetos de dados que são manipulados em componentes e serviços. Isso garante que os objetos de dados sejam consistentes em todo o aplicativo, facilitando a manutenção e a compreensão do código.
+
+Vamos criar uma interface para um Produto que define quais propriedades um objeto de produto deve ter:
+
+```javascript
+export interface Product {
+ id: number;
+ name: string;
+ price: number;
+ description?: string;
+}
+```
+
+Nesta interface Product, são definidas as propriedades id, name, price, e uma propriedade opcional description. Qualquer classe ou objeto que implemente essa interface deve ter essas propriedades, assegurando que os dados do produto sejam estruturados de forma consistente.
+
+Interface é um conceito fundamental em programação orientada a objetos e é muito útil no desenvolvimento com Angular. Ela permite que os desenvolvedores definam contratos claros para os objetos de dados, garantindo consistência e previsibilidade em toda a aplicação.
+
+## Conclusão
+
+Os conceitos de Programação Orientada a Objetos (POO) são essenciais para o desenvolvimento de aplicativos escaláveis e sustentáveis, e o Angular, como um dos frameworks mais populares para a criação de aplicativos web, integra esses conceitos de forma eficaz em sua arquitetura. Ao aplicar princípios de encapsulamento, herança e polimorfismo, o Angular permite que os desenvolvedores criem soluções robustas e flexíveis, facilitando a manutenção e a evolução dos aplicativos ao longo do tempo.
+
+No entanto, é importante destacar que o Angular não é como C# ou Java, que são linguagens orientadas a objetos puras. Embora seja possível aplicar alguns princípios de POO no Angular, nem todos fazem sentido no contexto desse framework. Por exemplo, a herança, amplamente usada em OOP, não é recomendada em todos os casos no Angular. Em vez disso, a composição é frequentemente preferida, pois se alinha melhor com a filosofia do Angular de modularidade e reutilização de componentes.
+
+Em conclusão, enquanto o Angular oferece suporte para alguns conceitos de POO, ele não é o framework ideal para explicar ou aplicar todos os princípios da programação orientada a objetos de forma rigorosa.
+
+## Referência:
+
+- [Mastering Object-Oriented Programming: Best Practices and Design Patterns](https://medium.com/@poppyseedDev/mastering-object-oriented-programming-best-practices-and-design-patterns-e570d511b3b1)
+- [Angular Dependency Injection Guide](https://v17.angular.io/guide/dependency-injection)
+- [TypeScript and OOP](https://medium.com/@ibrahimsengun/typescript-and-oop-b7e13a4f9a77)
+- [Object-Oriented Programming with TypeScript](https://dev.to/kevin_odongo35/object-oriented-programming-with-typescript-574o)
+
+---
