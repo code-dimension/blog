@@ -13,7 +13,6 @@
 		"prepare": "husky install"
 	},
 	"dependencies": {
-		"@angular/core": "^18.2.2",
 		"@astrojs/rss": "3.0.0",
 		"@tinacms/cli": "^1.5.30",
 		"astro": "3.2.3",
