@@ -11,7 +11,7 @@ Caso você encontre algum problema em algum post, fique a vontade para corrigir!
 Esses são os passos que você deve seguir:
 
 - Faça o fork do projeto
-- No seu fork, crie uma branch a partir da main com a descrição do problema. Ex: `git checkout -b correção-no-post-xyz`
+- No seu fork, crie uma branch a partir da main com a descrição do problema. Ex: `git checkout -b fix/correção-no-post-xyz`
 - Os posts estão na pasta `src/content/blog`
 - Faça a correção
 - Teste executando `npm start` e verificando se tudo está ok no navegador
@@ -29,6 +29,7 @@ Esses são os passos que você deve seguir:
 - No seu fork, crie uma branch a partir da `main` com a descrição do novo post. Ex: `git checkout -b feat/novo-post-xyz`
 - Os posts estão na pasta `src/content/blog`
 - Crie um novo arquivo com a extensão `.mdx`. Ex: `meu-novo-post.mdx`
+- Coloque a imagem de capa do seu post na pasta `public/images/posts` com o nome do seu post (ex: `facade-pattern-in-angular.png`)
 - Aplique os frontmatters necessário. Você pode se basear nos posts que já existem.
 - Se for seu primeiro post no Blog, adicione seus dados em `src/data/authors.ts` no array `authors`.
 - Coloque a sua foto de perfil na pasta `public/images/authors` com seu nome.
