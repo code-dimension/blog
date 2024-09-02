@@ -1,5 +1,5 @@
 ---
-heroImage: /images/posts/bannerImg.png
+heroImage: /images/posts/oo-principles-in-angular.png
 category: Angular
 description: >-
   Este artigo explora como aplicar os princípios da Programação Orientada a Objetos (OO) no desenvolvimento com Angular, oferecendo insights e exemplos práticos.
@@ -31,58 +31,51 @@ No Angular, a separação de HTML, CSS e TypeScript em componentes distintos exe
 Exemplo de Encapsulamento no Angular
 Vamos ilustrar o uso do encapsulamento no Angular com um exemplo simples de um sistema de gerenciamento de receitas financeiras. No exemplo a seguir, encapsulamos a lógica, o template e os estilos relacionados ao nosso componente de visão geral financeira:
 
-```javascript
+```ts
 import { Component } from '@angular/core'
 
 @Component({
-selector: 'app-finance-overview',
-template: `
+	selector: 'app-finance-overview',
+	template: `
+		Visão geral das Finanças
+		{{ item.type }}: $ {{ item.amount.toFixed(2) }}
+	`,
+	styles: [
+		`
+			.finance-overview {
+				border: 1px solid #ccc;
+				padding: 20px;
+				border-radius: 8px;
+				max-width: 400px;
+				margin: auto;
+			}
 
-     Visão geral das Finanças
+			h2 {
+				color: #2c3e50;
+				text-align: center;
+			}
 
+			ul {
+				list-style-type: none;
+				padding: 0;
+			}
 
-         {{ item.type }}: $ {{ item.amount.toFixed(2) }}
-
-`,
- styles: [
-   `
-.finance-overview {
-border: 1px solid #ccc;
-padding: 20px;
-border-radius: 8px;
-max-width: 400px;
-margin: auto;
-}
-
-     h2 {
-       color: #2c3e50;
-       text-align: center;
-     }
-
-
-     ul {
-       list-style-type: none;
-       padding: 0;
-     }
-
-
-     li {
-       padding: 10px;
-       background: #f3f3f3;
-       margin-bottom: 8px;
-       border-radius: 4px;
-       font-weight: bold;
-     }
-
-`,
-],
+			li {
+				padding: 10px;
+				background: #f3f3f3;
+				margin-bottom: 8px;
+				border-radius: 4px;
+				font-weight: bold;
+			}
+		`
+	]
 })
 export class FinanceOverviewComponent {
-financeData: { type: string; amount: number }[] = [
-{ type: 'Receita Total', amount: 7385.0 },
-{ type: 'Despesa Total', amount: 455.0 },
-{ type: 'Saldo Total', amount: 6930.0 },
-];
+	financeData: { type: string; amount: number }[] = [
+		{ type: 'Receita Total', amount: 7385.0 },
+		{ type: 'Despesa Total', amount: 455.0 },
+		{ type: 'Saldo Total', amount: 6930.0 }
+	]
 }
 ```
 
@@ -97,41 +90,39 @@ Vamos considerar um exemplo prático para ilustrar a herança em Angular. Suponh
 
 Aqui um exemplo de como poderíamos implementar isso no angular:
 
+```ts
 import { Component } from '@angular/core'
 
-```javascript
 @Component({
-selector: 'app-finance-overview',
-templateUrl: './finance-overview.component.html',
-styleUrl: './finance-overview.component.scss',
+	selector: 'app-finance-overview',
+	templateUrl: './finance-overview.component.html',
+	styleUrl: './finance-overview.component.scss'
 })
 export class FinanceOverviewComponent {
-financeData: { type: string; amount: number }[] = [
-{ type: 'Receita Total', amount: 7385.0 },
-{ type: 'Despesa Total', amount: 455.0 },
-{ type: 'Saldo Total', amount: 6930.0 },
-];
+	financeData: { type: string; amount: number }[] = [
+		{ type: 'Receita Total', amount: 7385.0 },
+		{ type: 'Despesa Total', amount: 455.0 },
+		{ type: 'Saldo Total', amount: 6930.0 }
+	]
 }
 ```
 
 A herança é um conceito extremamente útil para reutilizar lógicas em diferentes componentes. No contexto do Angular, isso permite que um componente herde todas as propriedades e métodos de outro, facilitando a manutenção e a consistência do código.
 
-```javascript
+```ts
 import { Component } from '@angular/core'
 import { FinanceOverviewComponent } from '../finance-overview/finance-overview.component'
 
 @Component({
-selector: 'app-toolbar',
-templateUrl: './toolbar.component.html',
-styleUrl: './toolbar.component.scss',
+	selector: 'app-toolbar',
+	templateUrl: './toolbar.component.html',
+	styleUrl: './toolbar.component.scss'
 })
 export class ToolbarComponent extends FinanceOverviewComponent {
-get balance(): number {
-const saldoTotal = this.financeData.find(
-(data) => data.type === 'Saldo Total'
-);
-return saldoTotal ? saldoTotal.amount : 0;
-}
+	get balance(): number {
+		const saldoTotal = this.financeData.find((data) => data.type === 'Saldo Total')
+		return saldoTotal ? saldoTotal.amount : 0
+	}
 }
 ```
 
@@ -142,28 +133,28 @@ Na Programação Orientada a Objetos, a abstração é um conceito fundamental q
 
 Vamos a um exemplo prático no Angular para ilustrar como a abstração é usada. Suponha que temos uma classe base que representa uma API. Essa classe não apenas busca uma lista de produtos, mas também recupera dados gerais como receitas, saldos totais e despesas.
 
-```javascript
+```ts
 import { Injectable } from '@angular/core'
 import { HttpClient, HttpHeaders } from '@angular/common/http'
 import { Observable } from 'rxjs'
 
 @Injectable({
-providedIn: 'root',
+	providedIn: 'root'
 })
 export abstract class ServiceApi {
-protected headers: HttpHeaders;
+	protected headers: HttpHeaders
 
-constructor(protected http: HttpClient) {
-this.headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-}
+	constructor(protected http: HttpClient) {
+		this.headers = new HttpHeaders({ 'Content-Type': 'application/json' })
+	}
 
-protected get(url: string): Observable {
-return this.http.get(url, { headers: this.headers });
-}
+	protected get(url: string): Observable {
+		return this.http.get(url, { headers: this.headers })
+	}
 
-protected post(url: string, data: any): Observable {
-return this.http.post(url, data, { headers: this.headers });
-}
+	protected post(url: string, data: any): Observable {
+		return this.http.post(url, data, { headers: this.headers })
+	}
 }
 ```
 
@@ -171,24 +162,24 @@ Aqui, criamos a classe abstrata ServiceApi, que fornece métodos comuns para rea
 
 Em seguida, vamos criar um serviço específico que herda dessa classe base e a utiliza para interagir com a API de produtos:
 
-```javascript
+```ts
 import { Injectable } from '@angular/core'
 import { ApiService } from './api.service'
 import { Produto } from '../models/product.model'
 import { Observable } from 'rxjs'
 
 @Injectable({
-providedIn: 'root'
+	providedIn: 'root'
 })
 export class ProductApiService extends ApiService {
-private baseUrl = 'http://example.com/api/products';
+	private baseUrl = 'http://example.com/api/products'
 
-getAll(): Observable {
-return this.get(this.baseUrl);
-}
-create(product: Produto): Observable {
-return this.post(this.baseUrl, product);
-}
+	getAll(): Observable {
+		return this.get(this.baseUrl)
+	}
+	create(product: Produto): Observable {
+		return this.post(this.baseUrl, product)
+	}
 }
 ```
 
@@ -202,22 +193,24 @@ O polimorfismo é um conceito central na Programação Orientada a Objetos que p
 
 Vamos a um exemplo prático. Suponha que temos um serviço base que define uma interface comum para um grupo de serviços relacionados. Esse serviço base será herdado por outros serviços específicos, que implementarão suas próprias funcionalidades.
 
-```javascript
+```ts
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { ApiService } from './api.service'
 
 @Injectable({
-providedIn: 'root',
+	providedIn: 'root'
 })
 export class RecipeApiService extends ApiService {
-private baseUrl = 'http://localhost:3000/api/recipes';
-constructor(http: HttpClient) {
-super(http);
-}
-get(url: string) {
-return this.http.get(`${this.baseUrl}/${url}`);
-}
+	private baseUrl = 'http://localhost:3000/api/recipes'
+
+	constructor(http: HttpClient) {
+		super(http)
+	}
+
+	get(url: string) {
+		return this.http.get(`${this.baseUrl}/${url}`)
+	}
 }
 ```
 
@@ -231,12 +224,12 @@ Uma interface é uma maneira de definir contratos que uma classe ou objeto deve 
 
 Vamos criar uma interface para um Produto que define quais propriedades um objeto de produto deve ter:
 
-```javascript
+```ts
 export interface Product {
- id: number;
- name: string;
- price: number;
- description?: string;
+	id: number
+	name: string
+	price: number
+	description?: string
 }
 ```
 
