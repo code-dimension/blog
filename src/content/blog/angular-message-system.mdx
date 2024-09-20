@@ -1,0 +1,185 @@
+---
+heroImage: /images/posts/angular-message-system.png
+category: Angular
+description: >-
+  Aprenda a criar um sistema de mensagem global para suas aplicações Angular, aproveitando as facilidades oferecidas pelo Angular Material para uma experiência de usuário consistente e agradável.
+pubDate: '2024-09-19'
+draft: false
+tags:
+  - angular
+title: 'Criando um Sistema de Mensagens Globais com Angular Material'
+authorId: 'sougabriel'
+---
+
+Olá! Neste artigo, vou mostrar como criar um simples sistema de mensagem para exibir em suas aplicações [_Angular_](https://angular.dev/overview) utilizando o [_Material Design_](https://material.angular.io/). O objetivo é fornecer uma base sólida para a implementação de mensagens, aproveitando as facilidades oferecidas pelo _Angular Material_ para uma experiência de usuário consistente e agradável.
+
+## Pré-requisitos
+
+Antes de começar, é importante garantir que tenha as ferramentas necessárias instaladas no ambiente de desenvolvimento.
+
+- **Node.js e NPM:** Certifique-se de ter instalado o [Node.js](https://nodejs.org/en) e do [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) em sua máquina. Neste artigo eu uso a versão 20.11.1 do _Node.js_ e 10.2.4 do _NPM_.
+- **Angular CLI:** Utilizaremos o _Angular_ CLI para gerar e gerenciar nosso projeto Angular. Instale-o globalmente utilizando o seguinte comando: `npm install -g @angular/cli`.
+
+## Criando o Projeto
+
+Vamos começar criando um novo projeto _Angular_. Abra o terminal no diretório onde ficara o projeto e execute o seguinte comando: `ng new nome-do-projeto` (Pode escolher qualquer opção durante a criação do projeto, pois não afetara a implementação do serviço de mensagem diretamente).
+
+## Adicionando o Pacote do Angular Material
+
+O _Angular_ possui um pacote chamado '@angular/material', que fornece uma ampla gama de componentes e estilos baseados no _Material Design_ do _Google_. Para adicionar este pacote ao nosso projeto, basta executar o seguinte comando: `ng add @angular/material`.
+
+## Criando os Arquivos
+
+Agora que temos o projeto configurado e o pacote do _Angular Material_ adicionado, vamos criar os arquivos necessários para nosso serviço de mensagem. Usando o _Angular_ CLI nós conseguimos gerar automaticamente os arquivos necessários.
+
+1. **Arquivo de Interface:** `ng g interface message/interface/message`.
+
+2. **Arquivo de Serviço:** `ng g service message/service/message`.
+
+3. **Arquivo de Componente:** `ng g component message/component/message`.
+
+## Implementação dos Arquivos
+
+Neste ponto, temos os arquivos necessários gerados. Agora, vamos nos concentrar na implementação de cada um deles.
+
+### Interface
+
+A _interface_ de mensagem definirá a estrutura dos objetos de mensagem que nosso aplicativo utilizará. Isso nos ajudará a manter consistência e clareza em todo o código. No exemplo abaixo está uma _interface_ bem simples, com apenas um valor que representa a mensagem a ser exibida, você pode alterar da forma que quiser para deixar mais completo.
+
+```typescript
+export interface Message {
+	message: string
+}
+```
+
+### Componente
+
+Este componente será responsável por exibir as mensagens na interface do usuário. Podemos personalizá-lo de acordo com as necessidades do projeto e integrá-lo facilmente com o _Material Design_ para obter um visual moderno e atraente.
+
+1. Arquivo: message.component.ts
+
+```typescript
+import { Component, inject } from '@angular/core'
+import {
+	MatSnackBarAction,
+	MatSnackBarActions,
+	MatSnackBarLabel,
+	MatSnackBarRef,
+	MAT_SNACK_BAR_DATA
+} from '@angular/material/snack-bar'
+import { MatButtonModule } from '@angular/material/button'
+import { Message } from '../../interface/message'
+
+@Component({
+	selector: 'app-message',
+	standalone: true,
+	imports: [MatButtonModule, MatSnackBarLabel, MatSnackBarActions, MatSnackBarAction],
+	templateUrl: './message.component.html',
+	styleUrl: './message.component.scss'
+})
+export class MessageComponent {
+	protected mensagemRef = inject(MatSnackBarRef)
+	protected message: Message = inject(MAT_SNACK_BAR_DATA)
+}
+```
+
+2. Arquivo: message.component.html
+
+```html
+<span class="message" matSnackBarLabel> {{ message.message }} </span>
+<span matSnackBarActions>
+	<button mat-button matSnackBarAction (click)="mensagemRef.dismissWithAction()">Yes</button>
+	<button mat-button matSnackBarAction (click)="mensagemRef.dismiss()">No</button>
+</span>
+```
+
+3. Arquivo: message.component.scss
+
+```css
+:host {
+	display: flex;
+}
+.message {
+	color: hotpink;
+}
+```
+
+### Service
+
+Esta service será responsável por gerenciar a lógica relacionada às mensagens desta aplicação.
+
+```typescript
+import { Injectable, inject } from '@angular/core'
+import { Message } from '../interface/message'
+import { MatSnackBar } from '@angular/material/snack-bar'
+import { MessageComponent } from '../component/message/message.component'
+
+@Injectable({
+	providedIn: 'root'
+})
+export class MessageService {
+	protected messageBar = inject(MatSnackBar)
+	public openMessageBar(message: Message) {
+		const messageRef = this.messageBar.openFromComponent(MessageComponent, {
+			duration: 5000,
+			verticalPosition: 'bottom',
+			horizontalPosition: 'center',
+			data: message
+		})
+		return messageRef
+	}
+}
+```
+
+Nesta service é criado uma função para exibir a mensagem. O método '_openFromComponent_' do _MatSnackBar_ possuí algumas configurações extras como duração da mensagem, posição na tela e dados que poderão ser usados no componente de mensagem.
+
+## Resultado
+
+Para ver se está funcionando, instâncie o _MessageService_ e _Message Interface_ no componente com um botão para exibir a mensagem:
+
+```typescript
+import { Component, inject } from '@angular/core'
+import { MessageService } from './message/service/message.service'
+import { Message } from './message/interface/message'
+
+@Component({
+	selector: 'app-root',
+	standalone: true,
+	imports: [],
+	template: ` <button (click)="openMessage(this.actionMessage)">Open Message</button> `,
+	styles: ''
+})
+export class AppComponent {
+	protected messageService = inject(MessageService)
+
+	protected actionMessage: Message = {
+		message: 'Make an Action? '
+	}
+
+	openMessage(message: Message) {
+		const messageRef = this.messageService.openMessageBar(message)
+
+		messageRef.afterOpened().subscribe(() => {
+			console.log('The Message has Opened!')
+		})
+
+		messageRef.onAction().subscribe(() => {
+			console.log('An Action as Activated!')
+		})
+
+		messageRef.afterDismissed().subscribe(() => {
+			console.log('The Message has Closed!')
+		})
+	}
+}
+```
+
+O método '_afterOpened_' é acionado quando a mensagem é exibida na tela, '_onAction_' é acionado quando o usuário pressiona o botão de ação do componente e o método '_afterDismissed_' é disparado quando a mensagem para de ser exibida, seja por tempo ou por ação do usuário.
+
+![Show Message Component](public/images/posts/angular-message-system-result1.png)
+
+![Message Component Actions](public/images/posts/angular-message-system-result2.png)
+
+## Conclusão
+
+Neste artigo, você aprendeu como criar um serviço de mensagem no _Angular_, utilizando o _Material Design_ para uma experiência visualmente agradável e reutilizável em qualquer parte do projeto.
