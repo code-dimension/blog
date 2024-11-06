@@ -151,12 +151,12 @@ export class MeuComponente {
 	})
 
 	atualizar() {
-		this.recursoTodos.refresh()
+		this.recursoTodos.reload()
 	}
 }
 ```
 
-A função `refresh` vai rodar a função `loader` novamente. Se você chamar a função `refresh` várias vezes, a função `loader` será chamada apenas uma vez até que a requisição anterior seja finalizada (comportamento semelhante ao `exhaustMap` no RxJS).
+A função `reload` vai rodar a função `loader` novamente. Se você chamar a função `reload` várias vezes, a função `loader` será chamada apenas uma vez até que a requisição anterior seja finalizada (comportamento semelhante ao `exhaustMap` no RxJS).
 
 ### Carregando dados específicos com base em outros signals
 
