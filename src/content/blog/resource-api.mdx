@@ -1,0 +1,305 @@
+---
+heroImage: /images/posts/angular-19-resource-api.png
+category: Angular
+description: 'Angular 19 vai introduzir uma nova funcionalidade chamada Resource API para carregar recursos. Isso permitirá recuperar dados de um servidor HTTP remoto, monitorar o status da requisição e atualizar os dados localmente quando necessário.'
+pubDate: '2024-11-06'
+draft: false
+tags:
+  - angular
+title: 'Angular 19: Conheça a nova Resource API'
+authorId: 'henrique-custodia'
+---
+
+> Este artigo é baseado no [excelente trabalho de Enea Jahollari](https://push-based.io/article/everything-you-need-to-know-about-the-resource-api)
+
+Angular 19 vai introduzir uma nova funcionalidade chamada Resource API para carregar recursos. Isso permitirá recuperar dados de um servidor HTTP remoto, monitorar o status da requisição e atualizar os dados localmente quando necessário.
+
+### Carregando Dados com a Resource API
+
+A API de recursos é bem simples em sua essência. Vamos ver o exemplo mais básico de como utilizá-la.
+
+```typescript
+import { resource } from '@angular/core'
+
+@Component({})
+export class MeuComponente {
+	recursoTodo = resource({
+		loader: () => {
+			return Promise.resolve({ id: 1, title: 'Hello World', completed: false })
+		}
+	})
+
+	constructor() {
+		effect(() => {
+			console.log('Valor: ', this.recursoTodo.value())
+			console.log('Status: ', this.recursoTodo.status())
+			console.log('Erro: ', this.recursoTodo.error())
+		})
+	}
+}
+```
+
+A API de recursos usa Promises no parâmetro `loader` por padrão. Além disso, a API de recursos retorna um objeto `WritableResource`, que nos permite atualizar os dados localmente quando necessário.
+
+Podemos acessar o valor atual do recurso usando o signal `value`, o status do recurso com o signal `status`, e o erro do recurso através do signal `error`.
+
+O código acima vai imprimir o seguinte:
+
+```
+Valor: undefined
+Status: 'loading'
+Erro: undefined
+
+Valor: { id: 1, title: "Hello World", completed: false }
+Status: 'resolved'
+Erro: undefined
+```
+
+### Como Atualizar os Dados Localmente
+
+Agora, vamos ver como atualizar os dados localmente.
+
+```typescript
+import { resource } from '@angular/core'
+
+@Component({
+	template: ` <button (click)="atualizarTodo()">Atualizar</button> `
+})
+export class MeuComponente {
+	recursoTodo = resource({
+		loader: () => {
+			return Promise.resolve({ id: 1, title: 'Hello World', completed: false })
+		}
+	})
+
+	atualizarTodo() {
+		this.recursoTodo.value.update((valor) => {
+			if (!valor) return undefined
+
+			return { ...valor, title: 'atualizado' }
+		})
+	}
+}
+```
+
+Podemos atualizar os dados localmente usando o método `update` do signal `value`.
+
+Isso vai resultar em:
+
+```
+Valor: { id: 1, title: "atualizado", completed: false }
+Status: 'local'
+Erro: undefined
+```
+
+O status `'local'` significa que os dados foram atualizados localmente.
+
+### Carregando os dados
+
+Agora, vamos fazer uma requisição adequada para o servidor. Vamos carregar alguns todos da API JSONPlaceholder.
+
+```typescript
+interface Todo {
+	id: number
+	title: string
+	completed: boolean
+}
+
+@Component()
+export class MeuComponente {
+	recursoTodos = resource({
+		loader: () => {
+			return fetch(`https://jsonplaceholder.typicode.com/todos?_limit=10`).then(
+				(res) => res.json() as Promise<Todo[]>
+			)
+		}
+	})
+}
+```
+
+O `recursoTodos` vai começar a fazer a requisição para o servidor assim que for criado.
+
+Claro, o `recursoTodos` não terá um valor ainda, porque a requisição ainda está em andamento.
+
+O código acima vai imprimir o seguinte:
+
+```
+Valor: undefined
+Status: 'loading'
+Erro: undefined
+
+Valor: [{ id: 1, title: "Hello World", completed: false }, { id: 2, title: "Hello World", completed: false }, ...]
+Status: 'resolved'
+Erro: undefined
+```
+
+### Atualizando os dados
+
+Vamos supor que queremos atualizar os dados quando o usuário clicar em um botão.
+
+```typescript
+import { resource } from '@angular/core'
+
+@Component()
+export class MeuComponente {
+	recursoTodos = resource({
+		loader: () => {
+			return fetch(`https://jsonplaceholder.typicode.com/todos?_limit=10`).then(
+				(res) => res.json() as Promise<Todo[]>
+			)
+		}
+	})
+
+	atualizar() {
+		this.recursoTodos.refresh()
+	}
+}
+```
+
+A função `refresh` vai rodar a função `loader` novamente. Se você chamar a função `refresh` várias vezes, a função `loader` será chamada apenas uma vez até que a requisição anterior seja finalizada (comportamento semelhante ao `exhaustMap` no RxJS).
+
+### Carregando dados específicos com base em outros signals
+
+Vamos supor que queremos carregar os todos com base no signal `todoId`.
+
+```typescript
+import { resource } from '@angular/core'
+
+@Component()
+export class MeuComponente {
+	todoId = signal(1)
+
+	recursoTodo = resource({
+		loader: () => {
+			return fetch(`https://jsonplaceholder.typicode.com/todos/${this.todoId()}`).then(
+				(res) => res.json() as Promise<Todo>
+			)
+		}
+	})
+}
+```
+
+Isso vai funcionar bem, mas vale notar que o `loader` não é rastreado, ou seja, se o signal `todoId` mudar, a requisição não será chamada novamente. Vamos torná-lo mais reativo!
+
+### Separando a requisição e o loader
+
+Agora, queremos que o recurso atualize os dados (chamando o `loader` novamente) sempre que o `todoId` mudar. Para isso, podemos usar o campo `request` do recurso. Podemos passar um signal para ele, e o recurso será rastreado.
+
+```typescript
+recursoTodo = resource({
+	request: this.todoId,
+	loader: ({ request: todoId }) => {
+		return fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`).then(
+			(res) => res.json() as Promise<Todo>
+		)
+	}
+})
+```
+
+Agora, quando o signal `todoId` mudar, a API de recursos vai recuperar os novos dados automaticamente.
+
+E o que acontece se tivermos requisições anteriores não finalizadas? Podemos cancelar a requisição anterior quando o `todoId` mudar, utilizando o `abortSignal` passado para a função `loader`.
+
+```typescript
+recursoTodo = resource({
+	request: this.todoId,
+	loader: ({ request: todoId, abortSignal }) => {
+		return fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
+			signal: abortSignal
+		}).then((res) => res.json() as Promise<Todo>)
+	}
+})
+```
+
+Isso vai cancelar a requisição anterior quando o `todoId` mudar, caso a requisição anterior ainda esteja em andamento.
+
+Também podemos ter múltiplas dependências de requisição, por exemplo:
+
+```typescript
+limite = signal(10)
+consulta = signal('')
+
+recursoTodos = resource({
+	request: () => ({ limite: this.limite(), consulta: this.consulta() }),
+	loader: ({ request, abortSignal }) => {
+		const { limite, consulta } = request as { limite: number; consulta: string }
+		return fetch(`https://jsonplaceholder.typicode.com/todos?_limit=${limite}&query=${consulta}`, {
+			signal: abortSignal
+		}).then((res) => res.json() as Promise<Todo[]>)
+	}
+})
+```
+
+Agora, o `recursoTodos` vai fazer a requisição com base nos signals `limite` e `consulta`. Sempre que algum desses signals mudar, a função `loader` será chamada novamente.
+
+### O que acontece quando temos uma requisição em andamento e atualizamos os dados localmente?
+
+Se isso acontecer, a API de recursos vai atualizar os dados localmente, mas cancelar a requisição em andamento.
+
+### Criando recursos mais reutilizáveis
+
+Ao separar os valores reativos da função `loader`, podemos mover a lógica do `loader` para uma função separada, e armazená-la onde quisermos.
+
+Antes:
+
+```typescript
+recursoTodo = resource({
+	request: this.todoId,
+	loader: ({ request: todoId, abortSignal }) => {
+		return fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
+			signal: abortSignal
+		}).then((res) => res.json() as Promise<Todo>)
+	}
+})
+```
+
+Depois:
+
+```typescript
+import { ResourceLoaderParams } from '@angular/core'
+
+function carregarTodo({
+	request: todoId,
+	abortSignal
+}: ResourceLoaderParams<number>): Promise<Todo> {
+	return fetch(`https://jsonplaceholder.typicode.com/todos/${todoId}`, {
+		signal: abortSignal
+	}).then((res) => res.json() as Promise<Todo>)
+}
+
+recursoTodo = resource({ request: this.todoId, loader: carregarTodo })
+```
+
+A função `carregarTodo` pode ser movida para qualquer lugar e reutilizada por outros recursos. O tipo `ResourceLoaderParams` contém todas as informações necessárias para fazer a requisição, e o parâmetro `request` é o que é passado para a função `loader`.
+
+### RxResource: A API baseada em Observables
+
+O Angular sempre usou Observables quando se trata de carregamento de dados. Isso significa que podemos usar Observables para derivar o carregamento de dados, em vez de usar signals e promises.
+
+Para tornar isso possível, podemos usar a função `rxResource`.
+
+```typescript
+import { rxResource } from '@angular/core/rxjs-interop'
+
+@Component()
+export class MeuComponente {
+	limite = signal(10)
+
+	recursoTodos = rxResource({
+		request: this.limite,
+		loader: (limite) => {
+			return this.http.get<Todo[]>(`https://jsonplaceholder.typicode.com/todos?_limit=${limite}`)
+		}
+	})
+}
+```
+
+Isso fará a requisição com base no signal `limite`, e a função `loader` poderá usar o valor de `limite` para fazer a requisição. Sempre que o signal `limite` mudar, a função `loader` será chamada novamente, e a requisição anterior será cancelada (comportamento semelhante ao `switchMap` no RxJS).
+
+Assim como podemos alterar o estado local com signals, podemos também modificá-lo usando `Observables` na função `rxResource`.
+
+### Resumo
+
+Agora temos 2 novas primitivas [resource, rxResource] que vão facilitar nossa vida ao lidar com o carregamento de dados no Angular. Essas primitivas eram muito aguardadas e serão lançadas na versão 19 como pré-visualizações para desenvolvedores.
+
+Link do PR: https://github.com/angular/angular/pull/58255
