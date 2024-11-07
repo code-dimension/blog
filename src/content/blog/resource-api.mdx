@@ -47,11 +47,11 @@ O código acima vai imprimir o seguinte:
 
 ```
 Valor: undefined
-Status: 'loading'
+Status: 2 (loading)
 Erro: undefined
 
 Valor: { id: 1, title: "Hello World", completed: false }
-Status: 'resolved'
+Status: 4 (resolved)
 Erro: undefined
 ```
 
@@ -73,7 +73,7 @@ export class MeuComponente {
 	})
 
 	atualizarTodo() {
-		this.recursoTodo.value.update((valor) => {
+		this.recursoTodo.update((valor) => {
 			if (!valor) return undefined
 
 			return { ...valor, title: 'atualizado' }
@@ -82,13 +82,13 @@ export class MeuComponente {
 }
 ```
 
-Podemos atualizar os dados localmente usando o método `update` do signal `value`.
+Podemos atualizar os dados localmente usando o método `update` (que utiliza `value.update` por baixo dos panos).
 
 Isso vai resultar em:
 
 ```
 Valor: { id: 1, title: "atualizado", completed: false }
-Status: 'local'
+Status: 5 (local)
 Erro: undefined
 ```
 
@@ -125,11 +125,11 @@ O código acima vai imprimir o seguinte:
 
 ```
 Valor: undefined
-Status: 'loading'
+Status: 2 (loading)
 Erro: undefined
 
 Valor: [{ id: 1, title: "Hello World", completed: false }, { id: 2, title: "Hello World", completed: false }, ...]
-Status: 'resolved'
+Status: 4 (resolved)
 Erro: undefined
 ```
 
@@ -220,7 +220,10 @@ limite = signal(10)
 consulta = signal('')
 
 recursoTodos = resource({
-	request: () => ({ limite: this.limite(), consulta: this.consulta() }),
+	request: () => ({
+		limite: this.limite(),
+		consulta: this.consulta()
+	}),
 	loader: ({ request, abortSignal }) => {
 		const { limite, consulta } = request as { limite: number; consulta: string }
 		return fetch(`https://jsonplaceholder.typicode.com/todos?_limit=${limite}&query=${consulta}`, {
