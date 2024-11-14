@@ -11,6 +11,7 @@ authorId: 'henrique-custodia'
 ---
 
 import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
 
 > Essa é uma transcrição do [artigo oficial do Angular sobre o operador @let](https://blog.angular.dev/introducing-let-in-angular-686f9f383f0f)
 
@@ -53,6 +54,8 @@ Outro exemplo de uso do `@let` em um template:
 <!-- Uso com um pipe assíncrono -->
 @let usuario = usuario$ | async;
 ```
+
+<Ads />
 
 As declarações `@let` são limitadas à visualização atual e seus descendentes, mas não podem ser acessadas por visualizações pai ou irmãs.
 

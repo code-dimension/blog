@@ -13,7 +13,8 @@
 			"@/site-config": ["src/data/site.config.ts"],
 			"@/styles": ["src/styles/"],
 			"@/assets": ["src/assets/*"],
-			"@embed-yt-video": ["src/components/embed-yt-video.astro"]
+			"@embed-yt-video": ["src/components/embed-yt-video.astro"],
+			"@ads": ["src/components/Ads.astro"]
 		}
 	},
 	"exclude": ["node_modules", "**/node_modules/*", ".vscode", "dist"]
