@@ -1,0 +1,169 @@
+---
+heroImage: /images/posts/angular-19-blog-post-banner.png
+category: Angular
+description: 'Angular 19 está trazendo Incremental Hydration, Event Replay por padrão, SSR sem Zone.js e outras novidades!'
+pubDate: '2024-11-20'
+draft: false
+tags:
+  - angular
+title: 'Angular 19: Conheça as novidades!'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+O Angular 19 chegou trazendo uma série de recursos que prometem transformar a experiência de desenvolvimento e entrega de aplicações web.
+
+Entre as principais novidades estão o **Incremental Hydration**, que otimiza o desempenho de aplicações SSR, **o modo de renderização por rota** e
+a evolução do sistema de reatividade com signals e **novas APIs estabilizadas**.
+
+Além disso, melhorias na experiência de desenvolvimento, como suporte a **Hot Module Replacement (HMR) para templates e estilos**,
+reforçam o compromisso do framework com produtividade e inovação.
+
+Quer saber como essas atualizações podem impactar seu próximo projeto?
+Continue lendo para explorar os detalhes mais recentes e aproveite ao máximo as novidades dessa nova versão do Angular!
+
+### Incremental Hydration em prévia para desenvolvedores
+
+O _Incremental Hydration_ permite que trechos do template sejam marcados utilizando a sintaxe familiar `@defer`, instruindo o Angular a carregar e hidratar essas partes de forma lazy, com base em gatilhos específicos.
+
+#### Demonstração de Incremental Hydration
+
+![Incremental Hydration demonstration](/images/posts/angular-19_incremental-hydration-example.gif)
+
+Em uma demonstração de uma página e-commerce renderizada no servidor, inicialmente todo o conteúdo está cinza, indicando que a aplicação foi renderizada, mas nenhum script associado à interface foi carregado. À medida que o usuário interage com elementos como a navegação lateral ou itens na página, o Angular hidrata essas seções, mudando o estilo visual.
+
+Essa funcionalidade, ilustrada na demonstração, utiliza três efeitos visuais para destacar o progresso:
+
+- **Cinza**: Componentes que ainda não foram carregados ou hidratados.
+- **Pulsações**: Indicam que o Angular está baixando um componente da rede.
+- **Borda roxa**: Mostra que o componente foi baixado e hidratado com sucesso.
+
+A funcionalidade já pode ser testada em aplicações que utilizam _server-side rendering (SSR)_ e hidratação completa. Basta adicionar ao _bootstrap_ do cliente:
+
+```typescript
+import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser'
+
+// ...
+provideClientHydration(withIncrementalHydration())
+```
+
+No template, é possível aplicar o _Incremental Hydration_ em partes específicas, como:
+
+```html
+@defer (hydrate on viewport) {
+<shopping-cart />
+}
+```
+
+Mais detalhes estão disponíveis na [documentação oficial](https://angular.dev/guide/incremental-hydration).
+
+---
+
+### _Event Replay_ habilitado por padrão
+
+Um problema comum em aplicações SSR é o intervalo entre um evento do usuário e o carregamento do código responsável por processá-lo. O _Event Replay_ captura eventos durante o carregamento inicial e os reexecuta quando o código está disponível, garantindo uma experiência contínua.
+
+A partir do Angular 19, o _Event Replay_ é habilitado por padrão para novos projetos que utilizam SSR. Para ativá-lo manualmente, configure o provedor de hidratação no _bootstrap_:
+
+```typescript
+bootstrapApplication(App, {
+	providers: [provideClientHydration(withEventReplay())]
+})
+```
+
+---
+
+### Modo de renderização por rota
+
+Agora é possível configurar como cada rota será renderizada, seja no servidor, no cliente ou pré-renderizada. Um exemplo de configuração:
+
+```typescript
+export const serverRouteConfig: ServerRoute[] = [
+	{ path: '/login', mode: RenderMode.Server },
+	{ path: '/dashboard', mode: RenderMode.Client },
+	{ path: '/**', mode: RenderMode.Prerender }
+]
+```
+
+Além disso, para rotas com parâmetros, é possível pré-renderizá-las com base em lógica personalizada utilizando o método `getPrerenderPaths`.
+
+---
+
+<Ads />
+
+---
+
+### SSR com Angular sem Zone.js
+
+O Angular 19 continua a evolução da versão experimental sem dependência de `zone.js`. Isso é feito por meio de novas primitivas que lidam com eventos pendentes e navegações no _HttpClient_ e no _Router_. É possível experimentar o suporte _zoneless_ removendo `zone.js` dos _polyfills_ e configurando o bootstrap:
+
+```typescript
+bootstrapApplication(App, {
+	providers: [provideExperimentalZonelessChangeDetection()]
+})
+```
+
+---
+
+### Melhoria na experiência de desenvolvimento
+
+#### _Hot Module Replacement (HMR)_
+
+O Angular agora suporta _Hot Module Replacement_ para estilos por padrão e oferece suporte experimental para templates. Alterações em estilos ou templates são aplicadas sem recarregar a página, mantendo o estado da aplicação.
+
+Para habilitar o HMR de templates, utilize:
+
+```bash
+NG_HMR_TEMPLATES=1 ng serve
+```
+
+---
+
+### Reactividade: novos recursos e APIs estáveis
+
+O Angular 19 traz novidades na evolução do sistema de reatividade:
+
+- **Inputs, Outputs e Queries estabilizados**: Agora, esses recursos estão disponíveis para uso em produção. Migrations automáticas podem ser realizadas com:
+
+  ```bash
+  ng generate @angular/core:signals
+  ```
+
+- **Linked Signals**: Introduz um signal mutável que acompanha um estado de nível superior. Por exemplo:
+
+  ```typescript
+  const options = signal(['apple', 'banana'])
+  const choice = linkedSignal(() => options()[0])
+  ```
+
+- **Resource API**: Para operações assíncronas, a API experimental `resource` integra-se ao sistema de signals:
+
+  ```typescript
+  user = resource({
+  	request: userId,
+  	loader: async ({ request: id }) => await userService.getUser(id)
+  })
+  ```
+
+---
+
+### Outras melhorias
+
+- **Standalone como padrão**: Componentes standalone agora são configurados como padrão.
+- **Testes unitários**: Suporte experimental para o builder esbuild no Karma, preparando o terreno para substituir esse runner em 2025.
+- **CSP baseado em hash**: Implementação experimental para políticas de segurança de conteúdo baseadas em hash, protegendo contra scripts maliciosos.
+- **Variáveis locais em templates**: Agora estáveis, permitem declarações como:
+
+  ```html
+  @let greeting = 'Olá ' + name.value;
+  ```
+
+---
+
+**Explore o Futuro com o Angular 19**
+
+A versão 19 do Angular traz avanços significativos para o desenvolvimento web. Com novidades como _Incremental Hydration_, renderização por rota e melhorias em reatividade com signals, esta atualização oferece mais eficiência e flexibilidade.
+
+Aproveite as novas ferramentas, otimize seus projetos e contribua para moldar o futuro do framework. O Angular 19 está pronto para elevar o nível das suas aplicações. 🚀
