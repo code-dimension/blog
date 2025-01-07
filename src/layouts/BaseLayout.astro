@@ -15,21 +15,6 @@ const { title, description, image, articleDate } = Astro.props
 		<BaseHead title={title} description={description} ogImage={image} articleDate={articleDate} />
 		<ProviderTheme />
 		<ProviderAnimations />
-
-		<!-- Mailchimp Pop-up Form -->
-		<script id='mcjs' is:inline>
-			!(function (c, h, i, m, p) {
-				;(m = c.createElement(h)),
-					(p = c.getElementsByTagName(h)[0]),
-					(m.async = 1),
-					(m.src = i),
-					p.parentNode.insertBefore(m, p)
-			})(
-				document,
-				'script',
-				'https://chimpstatic.com/mcjs-connected/js/users/763114d7e532b32f44fb297f9/fd2adaf2b8e6dda2643cadc0b.js'
-			)
-		</script>
 	</head>
 
 	<body class='bg-white text-stone-950 dark:bg-[#0a0910] dark:text-white w-full h-full'>
