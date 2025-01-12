@@ -19,6 +19,8 @@ manipular as requisições HTTP que são feitas pela aplicação.
 
 Nesse artigo você vai aprender como utilizar esse recurso fantástico!
 
+> <EmbedYtVideo src='https://www.youtube.com/embed/B1lZyaMmh2M?si=fmKqbFcnPrPO0n-S' />
+
 ## Como criar um interceptor
 
 No exemplo abaixo vamos criar um interceptor que intercepta todas as requisições HTTP e adiciona um **Header** personalizado chamado `Authorization`.
@@ -39,6 +41,8 @@ export const addAuthTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
 Note que para alterar a variável `req` (que é a requisição de fato) precisamos usar o método `clone` para criar uma nova instância.
 Essa abordagem é necessário pois cada objeto de requisição HTTP é imutável.
+
+<Ads />
 
 ## Como usar um interceptor
 
