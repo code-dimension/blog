@@ -1,0 +1,66 @@
+---
+heroImage: /images/posts/como-usar-interceptors.png
+category: Angular
+description: >-
+  Nesse artigo você vai aprender o que são Interceptors no Angular e como utilizar esse recurso para interceptar e manipular as requisições HTTP.
+pubDate: '2025-01-13'
+draft: false
+tags:
+  - angular
+title: 'Como usar Interceptors no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Interceptors no Angular são recursos muito poderosos e podem ser usados para interceptar e
+manipular as requisições HTTP que são feitas pela aplicação.
+
+Nesse artigo você vai aprender como utilizar esse recurso fantástico!
+
+## Como criar um interceptor
+
+No exemplo abaixo vamos criar um interceptor que intercepta todas as requisições HTTP e adiciona um **Header** personalizado chamado `Authorization`.
+
+> Você pode utilizar o comando [`ng g interceptor <name>`](https://angular.dev/cli/generate/interceptor) para criar uma estrutura básica do interceptor.
+
+```ts
+export const addAuthTokenInterceptor: HttpInterceptorFn = (req, next) => {
+	req = req.clone({
+		headers: req.headers.append('Authorization', 'my-token')
+	})
+
+	return next(req)
+}
+```
+
+> O código acima pode ficar em um arquivo TypeScript chamado `add-auth-token.interceptor.ts`.
+
+Note que para alterar a variável `req` (que é a requisição de fato) precisamos usar o método `clone` para criar uma nova instância.
+Essa abordagem é necessário pois cada objeto de requisição HTTP é imutável.
+
+## Como usar um interceptor
+
+Para usar o interceptor basta adicioná-lo como parâmetro na função [`withInterceptors`](https://angular.dev/api/common/http/withInterceptors#) da função [`provideHttpClient`](https://angular.dev/api/common/http/provideHttpClient#):
+
+```ts
+export const appConfig: ApplicationConfig = {
+	providers: [provideHttpClient(withInterceptors([addAuthTokenInterceptor]))]
+}
+```
+
+> O código acima é referente ao conteúdo do arquivo `app.config.ts`.
+
+Pronto! Agora é só fazer requisições HTTP utilizando o serviço [`HttpClient`](https://angular.dev/api/common/http/HttpClient) e verificar se o interceptor fez as alterações esperadas.
+
+## Conclusão
+
+Simples, não?
+
+Interceptors é uma das funcionalidades mais poderosas do Angular devido a sua
+simplicidade em padronizar a manipulação de requisições HTTP em massa.
+
+No próximo artigo você aprenderá [como testar Interceptors da forma mais confiável e eficiente possível](https://blog.codedimension.com.br/post/como-testar-interceptors/).
+
+Obrigado por ler até aqui e até mais! 😎
