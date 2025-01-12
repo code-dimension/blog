@@ -1,0 +1,126 @@
+---
+heroImage: /images/posts/como-testar-interceptors.png
+category: Angular
+description: >-
+  Nesse artigo você vai aprender como testar Interceptors no Angular da forma mais confiável e eficiente possível.
+pubDate: '2025-01-13'
+draft: false
+tags:
+  - angular
+title: 'Como testar Interceptors no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Existem algumas maneiras de testar Interceptors no Angular, algumas mais eficazes e outras menos.
+
+Nesse artigo você vai aprender como testar esse recurso da forma mais confiável e eficiente, exatamente como a aplicação consumiria o interceptor.
+
+## O que testaremos?
+
+No exemplo abaixo vamos testar um interceptor que intercepta todas as requisições HTTP e adiciona um **Header** personalizado chamado `Authorization`.
+
+```ts
+export const addAuthTokenInterceptor: HttpInterceptorFn = (req, next) => {
+	req = req.clone({
+		headers: req.headers.append('Authorization', 'my-token')
+	})
+
+	return next(req)
+}
+```
+
+Note que para alterar a variável `req` (que é a requisição de fato) precisamos usar o método `clone` para criar uma nova instância.
+Essa abordagem é necessário pois cada objeto de requisição HTTP é imutável.
+
+## Como testar?
+
+Testar interceptors é uma tarefa simples, mas pode gerar alguma confusão.
+
+A forma mais confiável de testar interceptors é sempre estruturar os testes da mesma forma como a aplicação consumiria o recurso.
+
+### Configurando a estrutura do teste
+
+É importante configurar a estrutura do teste da mesma forma que a aplicação consumiria o interceptor.
+
+```ts
+describe('addAuthTokenInterceptor', () => {
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [
+				// registra o interceptor
+				provideHttpClient(withInterceptors([addAuthTokenInterceptor])),
+				// disponibiliza os services para testar as requisições
+				provideHttpClientTesting()
+			]
+		})
+	})
+})
+```
+
+O código acima utiliza a função `provideHttpClient` com `withInterceptors` para registrar o interceptor.
+Dessa forma podemos simular requisições HTTP e verificar como a interceptação está sendo feita.
+
+> A função `provideHttpClientTesting` permite que usemos o serviço `HttpTestingController` para verificar as requições que foram feitas e assim gerar as asserções corretamente.
+
+### Testando o interceptor
+
+A forma mais simples de testar um interceptor é criando uma requisição HTTP e verificando se o interceptor fez as alterações esperadas.
+
+O código abaixo é um exemplo simples de como fazer isso.
+
+```ts
+it('deve adicionar um token de autenticação ao header da requisição', () => {
+	// faz a injeção dos services que permite gerenciar as requisições HTTP
+	const httpTestingController = TestBed.inject(HttpTestingController)
+	const httpClient = TestBed.inject(HttpClient)
+
+	httpClient.get(`/fake`).subscribe(() => {})
+
+	// captura a requisição HTTP
+	const request = httpTestingController.expectOne('/fake')
+
+	// verifica se o interceptor adicionou o header
+	expect(request.request.headers.get('Authorization')).toBe('my-token')
+})
+```
+
+<Ads />
+
+### Código final
+
+Juntando todas as partes acima, o código final ficaria assim:
+
+```ts
+describe('addAuthTokenInterceptor', () => {
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [
+				provideHttpClient(withInterceptors([addAuthTokenInterceptor])),
+				provideHttpClientTesting()
+			]
+		})
+	})
+
+	it('deve adicionar um token de autenticação ao header da requisição', () => {
+		const httpTestingController = TestBed.inject(HttpTestingController)
+		const httpClient = TestBed.inject(HttpClient)
+
+		httpClient.get(`/fake`).subscribe(() => {})
+
+		const request = httpTestingController.expectOne('/fake')
+
+		expect(request.request.headers.get('Authorization')).toBe('my-token')
+	})
+})
+```
+
+## Conclusão
+
+Testar interceptors é uma tarefa simples, mas pode gerar alguma confusão.
+
+A forma mais confiável de testar interceptors é sempre estruturar os testes da mesma forma como a aplicação consumiria o recurso.
+
+Obrigado por ler até aqui e até mais! :)
