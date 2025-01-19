@@ -1,0 +1,117 @@
+---
+heroImage: /images/posts/como-criar-initializer.png
+category: Angular
+description: >-
+  Nesse artigo você vai aprender o que são initializers no Angular e o e como utilizar esse recurso para criar rotinas dentro da sua aplicação.
+pubDate: '2025-01-20'
+draft: false
+tags:
+  - angular
+  - testes
+title: 'Como criar Initializers no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+[Initializers](https://angular.dev/api/core/provideAppInitializer) são recursos muito poderosos que permitem você criar rotinas em uma aplicação que serão rodadas assim que o Angular inicializar.
+
+Nesse artigo você vai aprender como utilizar esse recurso fantástico!
+
+> <EmbedYtVideo src='https://www.youtube.com/embed/Rb9zgZQpanA?si=jKs3IsTv8hZM3z9r' />
+
+## O que é um Initializer
+
+[Initializers](https://angular.dev/api/core/provideAppInitializer) são funções que serão executadas assim que o Angular inicializar.
+
+Esse recurso pode ser muito útil quando você precisar criar alguma rotina que deve ser rodada antes de qualquer outra operação da aplicação.
+
+Alguns cenários de uso seriam:
+
+- Fazer uma requisição HTTP para obter as configurações atualizadas da aplicação
+- Fazer download dos textos do idioma selecionado pelo usuário (cenário de uma aplicação multilingual)
+- Rodar alguma verificação e limpeza em `Local Storage` ou `Session Storage` para evitar problemas com dados antigos
+
+Um ponto importante sobre os [Initializers](https://angular.dev/api/core/provideAppInitializer) é a aplicação só será de fato inicializada (renderizar o componente raiz) quando todos os [Initializers](https://angular.dev/api/core/provideAppInitializer) forem executados.
+
+[Initializers](https://angular.dev/api/core/provideAppInitializer) podem retornar uma [`Promise`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise), [`Observable`](https://rxjs.dev/guide/observable) ou nada (void) para que dessa forma o Angular possa aguardar a conclusão da mesma.
+
+## Como criar um Inicializer
+
+No exemplo abaixo vamos criar um initializer que fará uma requisição HTTP assim que o Angular inicializar para recuperar as configurações da aplicação.
+
+```ts
+// essa função será registrada em app.config.ts
+export function provideConfigInitializer() {
+	// essa função registra um initializer de forma transparente
+	return provideAppInitializer(() => {
+		// faz a injeção do service que permite recuperar as configurações do servidor
+		const configService = inject(ConfigService)
+
+		// faz a requisição HTTP e mantém as configurações em memória
+		return configService.getData()
+	})
+}
+```
+
+> O código acima utiliza como referência o Angular 19
+
+Note que para criar o initializer precisamos utilizar a função [`provideAppInitializer`](https://angular.dev/api/core/provideAppInitializer#) que recebe uma função que retorna uma `Promise` ou `Observable`.
+
+Dessa forma fica bem simples e elegante o uso desse recurso.
+
+## Como utilizar um Inicializer
+
+Para utilizar o initializer criado acima, basta registrar a função no arquivo `app.config.ts`.
+
+```ts
+export const appConfig = {
+	providers: [provideConfigInitializer()]
+}
+```
+
+<Ads />
+
+## Como testar um Inicializer
+
+Testar um initializer é bem simples. Vamos utilizar como exemplo o initializer criado acima como base.
+
+```ts
+describe('provideConfigInitializer', () => {
+	it('deve recurperar as configurações', async () => {
+		TestBed.configureTestingModule({
+			providers: [
+				// registra o initializer
+				provideConfigInitializer(),
+
+				// faz o mock do service ConfigService
+				{
+					provide: ConfigService,
+					useValue: {
+						getData: jest.fn()
+					}
+				}
+			]
+		})
+
+		// faz a injeção dos services
+		const configService = TestBed.inject(ConfigService)
+
+		// verifica se a função getData foi chamada
+		expect(configService.getData).toHaveBeenCalled()
+	})
+})
+```
+
+Essa abordagem permite com que você teste o initializer da mesma forma que uma aplicação.
+
+> O teste acima utiliza como referência o Angular 19
+
+## Conclusão
+
+Initializers são uma ferramenta muito poderosa que permitem criar rotinas em uma aplicação que são executadas assim que o Angular inicializar.
+
+Esse recurso permite criar rotinas que podem resolver muitas coisas, como carregar configurações, limpar dados antigos, etc.
+
+Obrigado por ler até aqui e até mais! 😎
