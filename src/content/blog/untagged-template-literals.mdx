@@ -1,0 +1,89 @@
+---
+heroImage: /images/posts/Untagged-Template-Literals.png
+category: Angular
+description: >-
+  A versão mais recente do Angular, 19.2.0-next.0, introduz um recurso poderoso que os desenvolvedores vão adorar: suporte para Untagged Template Literals em expressões.
+pubDate: '2025-01-27'
+draft: false
+tags:
+  - angular
+title: 'Suporte para Untagged Template Literals no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+> Este artigo é baseado no [excelente trabalho de Netanel Basal](https://medium.com/netanelbasal/enhancing-angular-templates-with-untagged-template-literals-0baa5b4f8371)
+
+A versão mais recente do Angular, 19.2.0-next.0, introduz um recurso poderoso que os desenvolvedores vão adorar: suporte para Untagged Template Literals em expressões.
+
+Esse recurso traz mais flexibilidade e expressividade aos templates do Angular, permitindo aos desenvolvedores escrever templates mais limpos, concisos e dinâmicos sem soluções alternativas extras.
+
+Vamos explorar o que isso significa e como você pode aproveitá-lo em seus aplicativos.
+
+As seções abaixo mostram alguns casos de uso onde a utilização de **Untagged Template Literals** pode simplificar seus templates Angular:
+
+### Conteúdo dinâmico
+
+Você pode incorporar diretamente expressões dinâmicas em seus templates:
+
+```html
+<p>Mensagem: {{ `Olá, ${nome} - ${valor}` }}</p>
+```
+
+### Classes dinâmicas
+
+Criar nomes de classe dinâmicos nunca foi tão fácil:
+
+```html
+<p class="{{ `foo-${postfix}` }}">Classe personalizada</p>
+```
+
+```html
+<p [class]="`foo-${postfix}`">Classe personalizada</p>
+```
+
+Ambos os exemplos alcançam o mesmo resultado: atribuir classes dinamicamente com base no valor de `postfix`.
+
+### Interpolações com várias expressões
+
+Lide facilmente com interpolações mais complexas:
+
+```html
+<p>Com interpolações: {{ `Olá ${nome}, atualmente é ${horaDoDia}!` }}</p>
+```
+
+<Ads />
+
+### Pipes e Untagged Template Literals
+
+Untagged Template Literals também podem ser combinados com pipes do Angular:
+
+```html
+<p>Com pipe: {{ `olá ${nome}` | uppercase }}</p>
+```
+
+Neste caso, todo o Untagged Template Literal é passado pelo pipe uppercase, transformando-o em texto maiúsculo.
+
+### URLs dinâmicas
+
+Simplifique a geração de URL dinâmica para imagens ou outros ativos:
+
+```html
+<img [src]="`${base}/600x400`" />
+```
+
+### Loops com Untagged Template Literals
+
+Você pode usar Untagged Template Literals mesmo nas diretivas estruturais do Angular, como @for:
+
+```html
+@for(n of [1,2,3]; trackBy $index) {
+<button [attr.data-id]="'${n}-button'">Clique em {n}</button>
+}
+```
+
+Isso permite a renderização dinâmica de conteúdo repetido ao incorporar valores diretamente nas strings.
+
+Obrigado por ler até aqui e até mais! 😎
