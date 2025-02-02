@@ -1,0 +1,168 @@
+---
+heroImage: /images/posts/Como-criar-Resolvers.png
+category: Angular
+description: Nesse artigo você vai aprender o que são Resolvers no Angular e como criar e usar esse recurso que permite carregar dados durante o roteamento para um componente.
+pubDate: '2025-02-02'
+draft: false
+tags:
+  - angular
+title: 'Como criar Resolvers no Angular'
+authorId: 'henrique-custodia'
+---
+
+import Ads from '@ads'
+
+[Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) são recursos muito poderosos que permitem você carregar dados durante o roteamento para uma página, ou melhor, para um componente.
+
+Nesse artigo você vai aprender como utilizar esse recurso fantástico!
+
+## O que é um Resolver?
+
+[Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) são funções que serão rodadas assim que o roteamento para um determinado componente ser iniciado.
+
+Esse recurso pode ser muito útil quando você precisar carregar algum dado antes mesmo do componente vinculado a esse roteamento ser criado.
+
+Alguns cenários de uso seriam:
+
+- Evitar que os elementos da tela renderizem de forma "quebrada", trazendo uma experiência mais agradável para o usuário
+- Melhorar a sincronia do consumo de dados nos componentes
+- Dimininuição da complexidade dos componentes, uma vez que todos os dados já estão carregados antes de renderizar o componente
+
+Um ponto importante sobre os [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) é que o componente vinculado ao roteamento
+só será renderizado quando todos os [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) tiverem suas rotinas finalizadas.
+
+[Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) podem retornar
+uma [`Promise`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise), [`Observable`](https://rxjs.dev/guide/observable) ou um objeto
+já resolvido que será enviado para o componente.
+
+> Note que se você retornar uma [`Promise`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise) ou uma [`Observable`](https://rxjs.dev/guide/observable),
+> o Angular aguardará a conclusão da mesma para então renderizar o componente.
+
+## Como criar um Resolver
+
+No exemplo abaixo vamos criar um [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) que recuperará um objeto `Task` utilizando seu identificador (`id`) que está na rota de navegação.
+
+```ts
+import { inject } from '@angular/core'
+import { ResolveFn } from '@angular/router'
+import { TasksService } from '../../services/tasks.service'
+import { Task } from '../../interfaces/task'
+
+export const getTaskByIdResolver: ResolveFn<Task> = (route) => {
+	// faz a injeção do service
+	const tasksService = inject(TasksService)
+
+	// recupera o id da rota
+	const taskId = route.paramMap.get('id') as string
+
+	// recupera a tarefa pelo id
+	return tasksService.getById(taskId) // retorna um `Observable<Task>`
+}
+```
+
+> Você pode criar um resolver utilizando o comando [`ng g resolver`](https://angular.dev/cli/generate/resolver)
+
+Note que para criar o [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) precisamos apenas utilizar uma função que respeita a assinatura de [ResolverFn](https://angular.dev/api/router/ResolveFn).
+
+## Como registrar um Resolver
+
+Para utilizar o [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) criado acima, basta registrar a função na configuração de roteamento da aplicação (geralmente em `app.routes.ts`).
+
+```ts
+import { Route } from '@angular/router'
+import { getTaskByIdResolver } from './shared/resolvers/get-task-by-id.resolver/get-task-by-id.resolver'
+import { isLoggedInGuard } from './shared/guards/is-logged-in.guard'
+
+export const appRoutes: Route[] = [
+	{
+		path: 'edit/:id',
+		resolve: {
+			task: getTaskByIdResolver // resolver para recuperar a tarefa
+		},
+		loadComponent: () => import('./pages/form/edit/edit.component').then((m) => m.EditComponent)
+	}
+]
+```
+
+É muito importante notar que a propriedade `task`, dentro do objeto `resolve`, receberá o valor retornado pelo resolver. Assim, o componente vinculado ao roteamento terá acesso ao valor retornado pelo resolver utilizando a propriedade `task`.
+
+<Ads />
+
+## Como consumir um Resolver em um Componente
+
+> Vamos utilizar como exemplo o resolver criado acima como base.
+
+Existem duas formas de recuperar o valor retornado pelo resolver:
+
+### Maneira 1: Utilizando o `ActivatedRoute`
+
+Essa abordagem é mais antiga e mais verbosa.
+
+```ts
+@Component({
+	selector: 'app-edit',
+	templateUrl: './edit.component.html',
+	styleUrls: ['./edit.component.scss']
+})
+export class EditComponent {
+	// recebe o valor retornado pelo resolver
+	task: Task | null = null
+
+	// faz a injeção do service
+	activatedRoute = inject(ActivatedRoute)
+
+	ngOnInit() {
+		// recebe o valor retornado pelo resolver
+		this.task = this.activatedRoute.snapshot.data['task']
+	}
+}
+```
+
+### Maneira 2: Utilizando o `ActivatedRoute`
+
+Essa abordagem é nova e suportada em versões mais recentes do Angular.
+
+```ts
+@Component({
+	selector: 'app-edit',
+	templateUrl: './edit.component.html',
+	styleUrls: ['./edit.component.scss']
+})
+export class EditComponent {
+	task = input<Task>() // recebe o valor retornado pelo resolver
+}
+```
+
+Você precisará habilitar a função [withComponentInputBinding](https://angular.dev/api/router/withComponentInputBinding?tab=api) no seu `app.routes.ts`
+para que o valor retornado pelo [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) seja disponibilizado
+via [Input](https://angular.dev/api/core/input#) ao componente vinculado ao roteamento.
+
+```ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+	...
+    provideRouter(appRoutes, withComponentInputBinding()),
+	...
+  ],
+};
+```
+
+## Quando NÃO utilizar resolvers
+
+Existem situações em que será melhor evitar o uso de [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes).
+
+Alguns exemplos seriam:
+
+- Quando o componente vinculado ao roteamento precisa fazer muitas requisições para ser renderizado, gerando um demora significativa no carregamento do componente e degradando a experiência do usuário.
+- Se os [endpoints](https://pt.stackoverflow.com/questions/86399/qual-a-diferen%C3%A7a-entre-endpoint-e-api) que serão consumidos demoram mais de **500ms** para responder, é melhor fazer o carregamento dos dados após o componentes já estiverem renderizados para evitar problemas de usabilidade.
+
+Utilize [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) somente quando for necessário carregar dados com um tempo de resposta menor que **500ms**.
+Essa abordagem garantirá uma experiência quase instântanea ao usuário ao carregar o componente.
+
+---
+
+[Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) são recursos muito poderosos que permitem você carregar dados durante o roteamento para componente.
+
+Essa abordagem traz benefícios e também malefícios para a experiência de uso da aplicação. Por isso, utilize de forma conciente, ok?
+
+Obrigado por ler até aqui e até mais! 😎
