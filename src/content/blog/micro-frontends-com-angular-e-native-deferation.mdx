@@ -1,0 +1,169 @@
+---
+heroImage: /images/posts/mfe-native-federation.png
+category: Angular
+description: 'Entenda como criar Micro Frontends com Angular e Native Federation'
+pubDate: '2025-02-11'
+draft: false
+tags:
+  - angular
+  - micro-frontend
+title: 'Micro Frontends com Angular e Native Federation'
+authorId: 'henrique-custodia'
+---
+
+> Este artigo é baseado no [excelente trabalho de Manfred Steyer](https://blog.angular.dev/micro-frontends-with-angular-and-native-federation-7623cfc5f413)
+
+## Arquiteturas de Micro Frontends em Aplicações de Grande Escala
+
+Sistemas de software de grande escala são frequentemente implementados por diversas equipes multifuncionais. Para otimizar a entrega de novas funcionalidades por essas equipes, é fundamental minimizar a necessidade de coordenação entre elas. Isso exige uma modularização que organize o sistema em áreas de baixo acoplamento, das quais equipes individuais possam se responsabilizar.
+
+Existem diversas abordagens para implementar tais módulos de alto nível (também chamados de verticais). Por exemplo, podem ser implementados usando uma estrutura de pastas específica ou na forma de várias bibliotecas em um Monorepo. Micro Frontends representam um passo adiante, designando um aplicativo separado para cada vertical. Esse estilo arquitetural promete diversas vantagens, como um alto grau de autonomia para as equipes, mas também apresenta vários desafios.
+
+A primeira parte deste artigo oferece uma visão geral crítica dos benefícios e desvantagens dos Micro Frontends no contexto de aplicações de página única (SPAs). A segunda parte discute como tal arquitetura pode ser implementada com o [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation), um projeto comunitário construído sobre padrões web que oferece integração estreita com o Angular CLI.
+
+### Motivação por Trás dos Micro Frontends
+
+Assim como os Microsserviços, os Micro Frontends prometem diversas vantagens, tanto técnicas quanto organizacionais. Como a aplicação de arquiteturas de Micro Frontends resulta em vários aplicativos menores, testar, otimizar o desempenho e isolar falhas em uma parte do sistema abrangente se torna mais fácil, de acordo com diversas fontes.
+
+No entanto, o aumento da autonomia da equipe foi o principal motivo para aplicar esse estilo arquitetural nos vários casos em que estive envolvido como consultor. Equipes individuais não são bloqueadas por esperar por outras equipes e podem implantar separadamente a qualquer momento. Isso pode não ser uma preocupação significativa em um grande número de projetos. Ainda assim, assim que falamos sobre projetos com várias equipes em um ambiente corporativo com longos caminhos de comunicação e tempos de decisão, esse aspecto rapidamente se torna vital para o sucesso do projeto.
+
+As equipes também podem tomar suas próprias decisões que melhor se adequam aos seus objetivos - arquitetonicamente e tecnologicamente. Misturar vários frameworks do lado do cliente no mesmo aplicativo é considerado um antipadrão e deve ser evitado. No entanto, pode ajudar a criar um caminho de migração para uma nova pilha a longo prazo. A preocupação em ambientes corporativos é que encontramos soluções de software que geralmente sobrevivem à pilha de tecnologia média.
+
+Como os Micro Frontends resultam em processos de build separados, combiná-los com construções incrementais, onde apenas os aplicativos alterados precisam ser reconstruídos, tem um enorme potencial para melhorias no tempo de build. Por exemplo, o conhecido [Nx build system](https://nx.dev/) oferece essa opção. Curiosamente, esse recurso também pode ser usado sem aplicar outros aspectos, como alinhar equipes com aplicativos individuais ou implantações separadas. Há debate sobre se aproveitar essa opção tentadora leva automaticamente a arquiteturas de micro frontend.
+
+Um sistema composto por vários aplicativos menores pode oferecer outras vantagens organizacionais: é mais fácil integrar novos membros e escalar o desenvolvimento adicionando mais micro frontends. A autonomia da equipe também leva a ciclos de lançamento mais rápidos.
+
+## Desafios a Serem Considerados
+
+Toda decisão arquitetural tem consequências que precisam ser avaliadas, e os Micro Frontends não são exceção. Além das consequências positivas descritas acima, também há várias negativas a considerar.
+
+Por exemplo, Micro Frontends desenvolvidos individualmente podem divergir em UI/UX, levando a uma aparência inconsistente. Além disso, carregar vários aplicativos aumenta o número de bundles que precisam ser baixados, afetando negativamente os tempos de carregamento e aumentando a pressão sobre a memória.
+
+Dividir um aplicativo em partes de baixo acoplamento pode ser uma prática recomendada em geral. No entanto, muitas vezes é difícil definir os limites entre as verticais de forma clara o suficiente para implementá-las como aplicativos individuais. Além disso, embora ter vários aplicativos pequenos à primeira vista simplifique a implementação, integrá-los em uma solução abrangente traz complexidade adicional.
+
+Isso leva a um dos maiores desafios que vi na prática: estamos nos afastando de uma integração em tempo de compilação para uma integração em tempo de execução. Isso tem sérias consequências porque não podemos prever facilmente os problemas que podem surgir quando aplicativos desenvolvidos e implantados individualmente começam a interagir em tempo de execução. Além da chance de conflitos técnicos, também temos que ver que a geração atual de frameworks SPA não foi construída com esse modo de operação em mente.
+
+Em vez disso, os frameworks SPA modernos, especialmente o Angular, foram desenvolvidos para se concentrar em otimizações em tempo de compilação. Um compilador poderoso aproveita as verificações de tipo para identificar conflitos técnicos e emite código-fonte eficiente otimizado para tree-shaking. Além disso, o CLI no espaço Angular fornece um processo de construção altamente otimizado. Um uso fora do padrão necessário para implementar Micro Frontends prejudica algumas dessas conquistas.
+
+### O Angular Não Suporta Oficialmente Micro Frontends
+
+Por todos os motivos descritos, a equipe do Angular recomenda verificar se alternativas, como implementar as verticais individuais em Monorepos, que podem ser compilados juntos, são adequadas. Por exemplo, o Google adotou essa abordagem anos atrás e gerencia todos os seus produtos e bibliotecas em um único [Monorepo](https://dl.acm.org/doi/10.1145/2854146).
+
+É claro que também existem maneiras de compensar as desvantagens apontadas aqui, e algumas delas, como estabelecer um sistema de design para ajudar com uma UI/UX consistente ou carregamento lento de partes individuais do sistema, podem ser necessárias em geral. Mais detalhes sobre tais estratégias de compensação podem ser encontrados [nesta pesquisa](https://www.angulararchitects.io/blog/consequences-of-micro-frontends-survey-results) com mais de 150 profissionais de Micro Frontends.
+
+Todas as decisões arquiteturais têm benefícios e desvantagens e devem ser avaliadas com essas considerações se você for implementar uma solução. Se tal avaliação revelar que os Micro Frontends oferecem mais vantagens do que alternativas para atingir seus objetivos, as seções a seguir fornecem um caminho bem iluminado para implementar esse padrão arquitetural com Angular.
+
+## Micro Frontends com Federation
+
+O [Module Federation](https://module-federation.io/) é uma tecnologia popular para implementar Micro Frontends e compartilhar dependências. Inicialmente fornecido com o webpack 5, ele vem com um runtime agnóstico de ferramentas e oferece integração em tempo de compilação com rspack, rebuild e vite. Além do uso do servidor de desenvolvimento vite, essas tecnologias não são atualmente suportadas pelo Angular CLI. No entanto, soluções promissoras da comunidade, como [@ng-rsbuild/plugin-nx](https://angular-rspack.dev/) e [AnalogJS](https://analogjs.org/), permitem que sejam usadas com Angular. [Nx](https://nx.dev/) e o [Angular CLI plugin](https://www.npmjs.com/package/@angular-architects/module-federation) fornecem uma integração fácil.
+
+O [Module Federation](https://module-federation.io/) permite que um aplicativo carregue partes de outros aplicativos construídos e implantados separadamente de forma lazy. O aplicativo de carregamento é chamado de host; os integrados são chamados de remotos:
+
+![Micro Frontends with Federation](/images/posts/0_9A0YARA_jx888QS6.webp)
+
+O Federation, se permitido pela versão da biblioteca, pode compartilhar dependências como Angular ou RxJS entre o host e os remotos. Existem várias opções de configuração para [evitar incompatibilidades de versão](https://www.angulararchitects.io/blog/getting-out-of-version-mismatch-hell-with-module-federation/). Como o MF só pode decidir quais dependências compartilhar em tempo de execução, o tree-shaking para as partes compartilhadas não é possível.
+
+Para informar o host sobre os remotos e suas dependências compartilhadas, o [Module Federation](https://module-federation.io/) cria um arquivo de metadados, a chamada remote entry, durante a construção. Este arquivo precisa ser carregado no host.
+
+## Native Federation
+
+Para desacoplar completamente a ideia de Federation de bundlers específicos, iniciei o projeto [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) há vários anos. Sua superfície de API é muito semelhante à do [Module Federation](https://module-federation.io/). O foco está na portabilidade e em padrões como módulos ECMAScript e Import Maps. Seu tempo de compilação atua como um wrapper em torno de bundlers existentes. Para a comunicação com o bundler, ele usa um adaptador intercambiável:
+
+![Native Deferation Bundler Adapter](/images/posts/0_iumyAFDcIRaa5-Os.webp)
+
+A integração no Angular CLI delega diretamente ao ApplicationBuilder do Angular, que aproveita o bundler rápido esbuild, e é a base para vários recursos atuais, como hydration parcial. Devido à sua arquitetura, o [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) também pode ser portado para outros builders ou outras inovações que o CLI possa fornecer a longo prazo.
+
+Para integrar Micro Frontends construídos com o builder baseado em webpack do Angular, existe uma [solução de bridging](https://www.angulararchitects.io/blog/combining-native-federation-and-module-federation/) que permite o carregamento de tais remotos em um host [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation). Essa solução permite a adoção gradual do novo ApplicationBuilder do CLI e permite o compartilhamento de dependências entre os dois tipos de Federation. Um dos recursos adicionados recentemente é o suporte para [SSR e Hydration](https://www.angulararchitects.io/blog/ssr-and-hydration-with-native-federation-for-angular/), o que é vital para aplicações críticas de desempenho, como portais públicos e lojas virtuais.
+
+O [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) para Angular está próximo do `ApplicationBuilder` do CLI, mas seu modo de compilação para dependências compartilhadas difere. Embora funcione bem para pacotes que se alinham com o [Angular Package Format](https://angular.dev/tools/libraries/angular-package-format), que é o caso de todas as bibliotecas construídas com o CLI, outras bibliotecas podem apresentar alguns desafios, especialmente as mais antigas que ainda usam CommonJS ou convenções mais antigas para fornecer metadados.
+
+## Usando Native Federation no Angular
+
+Para a configuração, o [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) fornece um schematic:
+
+```bash
+ng add @angular-architects/native-federation --project mfe1 --port 4201 --type remote
+```
+
+A opção `type` define o tipo de aplicação. As opções possíveis são `remote`, `host` e `dynamic-host`. O último é um host configurado com um arquivo de configuração (manifesto de federação) durante a inicialização do aplicativo. Este manifesto informa ao aplicativo sobre os locais dos remotos e pode ser trocado por outro manifesto durante a implantação:
+
+```json
+{
+	"mfe1": "http://localhost:4201/remoteEntry.json"
+}
+```
+
+A chave, neste caso `mfe1`, é um nome curto que o host usa para se referir ao Micro Frontend. O valor é o local do remote entry com os metadados mencionados acima. Alternativamente, o manifesto pode ser substituído por um serviço que informa ao host a localização atual de todos os remotos implantados e atua como um registro de Micro Frontends.
+
+O schematic configura a delegação do builder do [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) para o `ApplicationBuilder` e cria um arquivo de configuração `federation.config.js`:
+
+```javascript
+const { withNativeFederation, shareAll } = require('@angular-architects/native-federation/config')
+
+module.exports = withNativeFederation({
+	name: 'mfe1',
+
+	exposes: {
+		'./Component': './projects/mfe1/src/app/app.component.ts'
+	},
+
+	shared: {
+		...shareAll({})
+	},
+
+	skip: [
+		'rxjs/ajax',
+		'rxjs/fetch',
+		'rxjs/testing',
+		'rxjs/webSocket'
+		// Adicione mais pacotes que você não precisa em tempo de execução
+	]
+})
+```
+
+A configuração atribui um nome exclusivo ao remoto ou host e define quais dependências compartilhar. Em vez de fornecer uma lista exaustiva de todas as dependências a serem compartilhadas, a configuração usa a função auxiliar `shareAll`, que adiciona todas as dependências encontradas no `package.json` do projeto. A lista `skip` é usada para optar por não compartilhar algumas delas ou seus pontos de entrada secundários.
+
+Os remotos também definem módulos EcmaScript expostos que podem ser carregados no shell. Para isso, o nó `exposes` mapeia os caminhos dos módulos para nomes curtos, como `./Component` no exemplo mostrado.
+
+O schematic também adiciona código para inicializar o [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) no `main.ts`. Para o host, este código aponta para o manifesto de federação:
+
+```javascript
+import { initFederation } from '@angular-architects/native-federation'
+
+initFederation('federation.manifest.json')
+	.catch((err) => console.error(err))
+	.then((_) => import('./bootstrap'))
+	.catch((err) => console.error(err))
+```
+
+Após inicializar a federação, o arquivo `bootstrap.ts`, também criado pelo schematic, é carregado. Ele contém o código usual para inicializar o Angular, por exemplo, via `bootstrapApplication` quando o aplicativo usa Componentes Standalone.
+
+Para carregar um componente ou configuração de roteamento exposto por um remoto, o carregamento lazy tradicional é combinado com a função `loadRemoteModule` do [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation):
+
+```javascript
+import { loadRemoteModule } from '@angular-architects/native-federation';
+
+export const APP_ROUTES: Routes = [
+  [...]
+
+  {
+    path: 'flights',
+    loadChildren: () =>
+      loadRemoteModule('mfe1', './Component').then((m) => m.AppComponent),
+  },
+
+  [...]
+];
+```
+
+Aqui, `mfe1` é a chave definida no manifesto, e `./Component` aponta para o respectivo módulo exposto na configuração de federação do remoto.
+
+Mais informações sobre o [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) podem ser encontradas [neste artigo de blog](https://www.angulararchitects.io/blog/micro-frontends-with-modern-angular-part-1-standalone-and-esbuild/) e no [readme do projeto](https://www.npmjs.com/package/@angular-architects/native-federation), que também links para um tutorial.
+
+### Conclusão
+
+Os Micro Frontends prometem vantagens significativas para aplicações de grande escala, como maior autonomia da equipe e implantação independente. Esses benefícios tornam esse estilo arquitetural particularmente atraente em ambientes corporativos com várias equipes, onde a comunicação otimizada e os ciclos de desenvolvimento rápidos são cruciais. Além disso, eles oferecem suporte à migração gradual para novas tecnologias e otimizam os tempos de construção aproveitando construções incrementais.
+
+No entanto, essas vantagens têm suas contrapartidas. Os Micro Frontends podem levar a uma UI/UX inconsistente, tempos de carregamento aumentados e integrações complexas em tempo de execução. Definir limites verticais claros e gerenciar a comunicação entre aplicativos aumenta o desafio. Além disso, frameworks como o Angular, projetados para otimização em tempo de compilação, enfrentam limitações em cenários de integração em tempo de execução. A equipe do Angular, portanto, recomenda alternativas como dividir um aplicativo em bibliotecas gerenciadas em um Monorepo, o que se alinha melhor com os pontos fortes do Angular em segurança de tipo e compilação eficiente.
+
+O [Module Federation](https://module-federation.io/) surgiu como uma solução popular para abordar alguns desafios, permitindo o carregamento lazy e o compartilhamento de dependências. O [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation) se baseia nesses conceitos com foco em padrões e portabilidade. Ele fornece uma integração perfeita no Angular CLI e seu `ApplicationBuilder` baseado em esbuild de alto desempenho, que também é a base para recursos avançados como SSR e hydration.
