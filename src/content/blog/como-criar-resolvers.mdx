@@ -118,7 +118,7 @@ export class EditComponent {
 }
 ```
 
-### Maneira 2: Utilizando o `ActivatedRoute`
+### Maneira 2: Utilizando `withComponentInputBinding()`
 
 Essa abordagem é nova e suportada em versões mais recentes do Angular.
 
@@ -147,7 +147,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## Quando NÃO utilizar resolvers
+## Quando NÃO utilizar Resolvers
 
 Existem situações em que será melhor evitar o uso de [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes).
 
@@ -159,10 +159,14 @@ Alguns exemplos seriam:
 Utilize [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) somente quando for necessário carregar dados com um tempo de resposta menor que **500ms**.
 Essa abordagem garantirá uma experiência quase instântanea ao usuário ao carregar o componente.
 
+## Como testar Resolvers
+
+[Nesse Artigo do Blog você entenderá como testar Resolvers da forma mais confiável e eficiente!](/post/como-testar-resolvers/)
+
 ---
 
 [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) são recursos muito poderosos que permitem você carregar dados durante o roteamento para componente.
 
 Essa abordagem traz benefícios e também malefícios para a experiência de uso da aplicação. Por isso, utilize de forma conciente, ok?
 
-Obrigado por ler até aqui e até mais! 😎
+Não se esqueça de [se inscrever na nossa Newsletter](https://www.codedimension.com.br/se-inscreva/) para receber todas as novidades sobre Angular e outras tecnologias.
