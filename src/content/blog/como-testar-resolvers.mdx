@@ -1,0 +1,221 @@
+---
+heroImage: /images/posts/como-testar-resolvers.jpg
+category: Angular
+description: >-
+  Nesse artigo você vai aprender como testar Resolvers no Angular da forma mais confiável e eficiente possível.
+pubDate: '2025-02-14'
+draft: false
+tags:
+  - angular
+  - testes
+title: 'Como testar Resolvers no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Existem algumas maneiras de testar [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) no Angular, algumas mais eficazes e outras menos.
+
+Nesse artigo você vai aprender como testar esse recurso da forma mais confiável e eficiente!
+
+## O que testaremos?
+
+No exemplo abaixo vamos testar um [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) que recupera um objeto tarefa utilizando seu identificador (`id`) que está na rota de navegação.
+
+```ts
+import { inject } from '@angular/core'
+import { ResolveFn } from '@angular/router'
+import { TasksService } from '../../services/tasks.service'
+import { Task } from '../../interfaces/task'
+
+export const getTaskByIdResolver: ResolveFn<Task> = (route) => {
+	// faz a injeção do service
+	const tasksService = inject(TasksService)
+
+	// recupera o id da rota
+	const taskId = route.paramMap.get('id') as string
+
+	// recupera a tarefa pelo id
+	return tasksService.getById(taskId) // retorna um `Observable<Task>`
+}
+```
+
+> Essa abordagem utiliza Angular 19 como referência.
+
+## Como testar?
+
+Testar um [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) é uma tarefa simples, mas pode gerar alguma confusão.
+
+A forma mais confiável de testar é sempre estruturar os testes da mesma forma como a aplicação consumiria o recurso.
+
+### Configurando a estrutura do teste
+
+É importante configurar a estrutura do teste da mesma forma que a aplicação consumiria o interceptor.
+
+```ts
+// cria um componente falso para testar o resolver
+@Component({
+	selector: 'app-test',
+	template: ''
+})
+class FakeComponent {
+	// recebe o valor retornado pelo resolver
+	task = input()
+}
+
+describe('getTaskByIdResolver', () => {
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [
+				// cria o mock do service TasksService
+				{
+					provide: TasksService,
+					useValue: {
+						getById: jest.fn()
+					}
+				},
+
+				// registra uma rota de teste
+				provideRouter(
+					[
+						{
+							path: 'test/:id',
+							// utiliza o resolver para recuperar a tarefa
+							resolve: { task: getTaskByIdResolver },
+							component: FakeComponent
+						}
+					],
+					// configura o componente para receber o valor retornado pelo resolver
+					// diretamente via input()
+					withComponentInputBinding()
+				)
+			]
+		})
+	})
+})
+```
+
+O código acima utiliza a função[ `provideRouter`](http://angular.dev/api/router/provideRouter) com [`withComponentInputBinding`](https://angular.dev/api/router/withComponentInputBinding) para registrar o resolver.
+Assim, o componente vinculado ao roteamento terá acesso ao valor retornado pelo resolver utilizando a [`input`](https://angular.dev/api/core/input#) `task`.
+
+Note também que estamos usando um componente falso (`FakeComponent`) para verificar se o valor retornado pelo resolver foi recebido corretamente.
+
+### Testando o resolver
+
+A forma mais simples de testar um [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) é criando
+uma navegação na aplicação e verificando se os dados foram retornados corretamente ao componente vinculado ao roteamento.
+
+O código abaixo é um exemplo simples de como fazer isso.
+
+```ts
+it('deve retornar uma tarefa', async () => {
+	const tasksService = TestBed.inject(TasksService)
+
+	// cria um objeto Task falso que será usado no mock de getById de TasksService
+	const fakeTask: Task = { id: '1', title: 'Item 1', completed: false }
+
+	// faz o mock do método getById de TasksService
+	;(tasksService.getById as jest.Mock).mockReturnValue(of(fakeTask))
+
+	// cria uma navegação na aplicação
+	const harness = await RouterTestingHarness.create(`test/${fakeTask.id}`)
+
+	// recupera o componente vinculado ao roteamento
+	// que após a navegação foi renderizado
+	const fakeComponentDebugEl = harness.fixture.debugElement.query(By.directive(FakeComponent))
+
+	// verifica se o método getById foi chamado com o id da tarefa falsa
+	expect(tasksService.getById).toHaveBeenCalledWith(fakeTask.id)
+
+	// verifica se o componente vinculado ao roteamento recebeu a tarefa retornada pelo resolver
+	expect(fakeComponentDebugEl.componentInstance.task()).toBe(fakeTask)
+})
+```
+
+> No código acima, estamos usando [Jest](https://jestjs.io/pt-BR/) como ferramenta de testes, mas o mesmo pode ser feito com qualquer ferramenta de testes.
+
+Estamos usando [`RouterTestingHarness`](https://angular.dev/api/router/testing/RouterTestingHarness) para criar uma navegação na aplicação
+e verificando se os dados foram retornados corretamente ao componente vinculado ao roteamento.
+
+Note que essa forma de testar o [Resolver](https://angular.dev/api/router/ResolveFn?tab=usage-notes) é exatamente como a aplicação consumiria o recurso.
+
+<Ads />
+
+### Código final
+
+Juntando todas as partes acima, o código final do teste ficaria assim:
+
+```ts
+// cria um componente falso para testar o resolver
+@Component({
+	selector: 'app-test',
+	template: ''
+})
+class FakeComponent {
+	// recebe o valor retornado pelo resolver
+	task = input()
+}
+
+describe('getTaskByIdResolver', () => {
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [
+				// cria o mock do service TasksService
+				{
+					provide: TasksService,
+					useValue: {
+						getById: jest.fn()
+					}
+				},
+
+				// registra uma rota de teste
+				provideRouter(
+					[
+						{
+							path: 'test/:id',
+							// utiliza o resolver para recuperar a tarefa
+							resolve: { task: getTaskByIdResolver },
+							component: FakeComponent
+						}
+					],
+					// configura o componente para receber o valor retornado pelo resolver
+					// diretamente via input()
+					withComponentInputBinding()
+				)
+			]
+		})
+	})
+
+	it('deve retornar uma tarefa', async () => {
+		const tasksService = TestBed.inject(TasksService)
+
+		// cria um objeto Task falso que será usado no mock de getById de TasksService
+		const fakeTask: Task = { id: '1', title: 'Item 1', completed: false }
+
+		// faz o mock do método getById de TasksService
+		;(tasksService.getById as jest.Mock).mockReturnValue(of(fakeTask))
+
+		// cria uma navegação na aplicação
+		const harness = await RouterTestingHarness.create(`test/${fakeTask.id}`)
+
+		// recupera o componente vinculado ao roteamento
+		// que após a navegação foi renderizado
+		const fakeComponentDebugEl = harness.fixture.debugElement.query(By.directive(FakeComponent))
+
+		// verifica se o método getById foi chamado com o id da tarefa falsa
+		expect(tasksService.getById).toHaveBeenCalledWith(fakeTask.id)
+
+		// verifica se o componente vinculado ao roteamento recebeu a tarefa retornada pelo resolver
+		expect(fakeComponentDebugEl.componentInstance.task()).toBe(fakeTask)
+	})
+})
+```
+
+## Conclusão
+
+Testar [Resolvers](https://angular.dev/api/router/ResolveFn?tab=usage-notes) é uma tarefa simples, mas pode gerar alguma confusão.
+
+A forma mais confiável de testar esse recurso é sempre estruturar os testes da mesma forma como a aplicação consumiria o recurso.
+
+Não se esqueça de [se inscrever na nossa Newsletter](https://www.codedimension.com.br/se-inscreva/) para receber todas as novidades sobre Angular e outras tecnologias.
