@@ -40,7 +40,7 @@ Em termos mais práticos, o [`httpResource`](https://angular.dev/api/common/http
 
 O [`httpResource`](https://angular.dev/api/common/http/httpResource) é uma ferramenta que visa tornar o desenvolvimento de aplicações Angular mais eficiente e intuitivo, especialmente em cenários onde a reatividade e o controle do estado das requisições são importantes.
 
-## Controle de estado assíncrono com httpResource
+## Controle de estado assíncrono
 
 O [`HttpResourceRef`](https://angular.dev/api/common/http/HttpResourceRef#) é um tipo retornado pela função [`httpResource`](https://angular.dev/api/common/http/httpResource) do Angular, e ele expõe diversas propriedades que facilitam o gerenciamento do estado e dos dados de uma requisição HTTP.
 
@@ -89,6 +89,8 @@ O [`httpResource`](https://angular.dev/api/common/http/httpResource) pode recebe
 Ao passar uma função, você permite que o [`httpResource`](https://angular.dev/api/common/http/httpResource) observe Signals, tornando-o um recurso reativo.
 
 Isso significa que, sempre que um Signal utilizado na função for alterado, a requisição será automaticamente atualizada.
+
+<Ads />
 
 ## Exemplo Prático: Busca Reativa de Usuários
 
