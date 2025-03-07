@@ -1,0 +1,191 @@
+---
+heroImage: /images/posts/http-resource.jpg
+category: Angular
+description: 'A versão 19.2 do Angular trouxe um recurso muito interessante para o controle de requisições HTTP: o `httpResource`. Essa funcionalidade permite que você gerencie o estado das suas requisições de forma natural e dinâmica. Vamos explorar como ele funciona e como você pode utilizá-lo em suas aplicações.'
+pubDate: '2025-03-07'
+draft: false
+tags:
+  - angular
+title: 'Angular 19.2: Reatividade com httpResource()'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+A versão 19.2 do Angular trouxe um recurso muito interessante para o controle de requisições HTTP: o [`httpResource`](https://angular.dev/api/common/http/httpResource).
+
+Essa funcionalidade permite que você gerencie o estado das suas requisições de forma natural e dinâmica. Vamos explorar como ele funciona e como você pode utilizá-lo em suas aplicações.
+
+> <EmbedYtVideo src='https://www.youtube.com/embed/y2O_nGIpz0w?si=jKs3IsTv8hZM3z9r' />
+
+## O que é httpResource?
+
+O [`httpResource`](https://angular.dev/api/common/http/httpResource) é um recurso especializado no carregamento de dados via protocolo HTTP. Sua principal função é capturar o estado da requisição e a resposta, facilitando o controle de operações assíncronas.
+
+## Para que serve o httpResource?
+
+Em termos mais práticos, o [`httpResource`](https://angular.dev/api/common/http/httpResource) serve para:
+
+- **Tornar as requisições HTTP reativas:**
+  - Ao utilizar signals, você pode criar requisições que se atualizam automaticamente sempre que um dado relevante muda. Isso é especialmente útil em cenários onde a interface precisa refletir dados dinâmicos de forma imediata.
+- **Gerenciar o estado das requisições de forma clara e concisa:**
+  - O [`httpResource`](https://angular.dev/api/common/http/httpResource) expõe signals que indicam o status da requisição (carregando, erro, sucesso), o valor da resposta, cabeçalhos e outros dados relevantes. Isso facilita a criação de interfaces que informam o usuário sobre o progresso e o resultado das requisições.
+- **Simplificar a validação de dados:**
+  - A integração com bibliotecas de validação de esquema, como [Zod](https://zod.dev/) e [Valibot](https://valibot.dev/), permite que você garanta que os dados recebidos estejam no formato esperado, melhorando a segurança e a confiabilidade da sua aplicação.
+- **Facilitar a manipulação de diferentes tipos de resposta:**
+  - Além de JSON, o [`httpResource`](https://angular.dev/api/common/http/httpResource) permite que você trabalhe com respostas em texto, Blob e ArrayBuffer, oferecendo mais flexibilidade para lidar com diferentes tipos de dados.
+
+**Em resumo**:
+
+O [`httpResource`](https://angular.dev/api/common/http/httpResource) é uma ferramenta que visa tornar o desenvolvimento de aplicações Angular mais eficiente e intuitivo, especialmente em cenários onde a reatividade e o controle do estado das requisições são importantes.
+
+## Controle de estado assíncrono com httpResource
+
+O [`HttpResourceRef`](https://angular.dev/api/common/http/HttpResourceRef#) é um tipo retornado pela função [`httpResource`](https://angular.dev/api/common/http/httpResource) do Angular, e ele expõe diversas propriedades que facilitam o gerenciamento do estado e dos dados de uma requisição HTTP.
+
+Essas propriedades podem ser divididas em dois grupos principais: aquelas herdadas de [`ResourceRef`](https://angular.dev/api/core/ResourceRef) e aquelas específicas para requisições HTTP.
+
+**Propriedades herdadas de [`ResourceRef`](https://angular.dev/api/core/ResourceRef):**
+
+- **`value()`:**
+  - Um Signal que contém o resultado da requisição HTTP (quando bem-sucedida). O tipo desse valor é determinado pelo tipo genérico passado para `httpResource`.
+- **`status()`:**
+  - Um Signal que indica o status da requisição, que pode ser:
+    - `idle`: A requisição ainda não foi iniciada.
+    - `loading`: A requisição está em andamento.
+    - `error`: Ocorreu um erro durante a requisição.
+    - `resolved`: A requisição foi concluída com sucesso.
+- **`error()`:**
+  - Um Signal que contém o erro ocorrido durante a requisição, caso tenha havido algum.
+- **`isLoading()`:**
+  - Um Signal booleano que indica se a requisição está em andamento.
+- **`reload()`:**
+  - Um método que permite reenviar a requisição HTTP.
+- **`update()` e `set()`:**
+  - Métodos que permitem modificar o valor do recurso.
+- **`asReadonly()`:**
+  - Um método que retorna uma versão somente leitura do recurso.
+- **`hasValue()`:**
+  - Um método que retorna um valor booleano indicando se o recurso possui um valor.
+- **`destroy()`:**
+  - Um método que permite parar o recurso.
+
+**Propriedades específicas para requisições HTTP:**
+
+- **`headers()`:**
+  - Um Signal que contém os cabeçalhos da resposta HTTP.
+- **`statusCode()`:**
+  - Um Signal que contém o código de status da resposta HTTP.
+- **`progress()`:**
+  - Um Signal que contém o progresso do download da resposta, caso a opção `reportProgress` tenha sido definida como `true` na configuração da requisição.
+
+Essas propriedades permitem que você acesse e monitore todos os aspectos relevantes de uma requisição HTTP, facilitando a criação de interfaces de usuário responsivas e informativas.
+
+## Como funciona?
+
+O [`httpResource`](https://angular.dev/api/common/http/httpResource) pode receber uma string (URL estática) ou uma função (URL dinâmica).
+
+Ao passar uma função, você permite que o [`httpResource`](https://angular.dev/api/common/http/httpResource) observe Signals, tornando-o um recurso reativo.
+
+Isso significa que, sempre que um Signal utilizado na função for alterado, a requisição será automaticamente atualizada.
+
+## Exemplo Prático: Busca Reativa de Usuários
+
+Vamos criar um exemplo prático de busca reativa de usuários utilizando o [`httpResource`](https://angular.dev/api/common/http/httpResource). Para isso, utilizaremos um [JSON Server](https://github.com/typicode/json-server/tree/v0) local para simular uma API.
+
+**1. Configuração do Projeto:**
+
+Primeiro, crie um novo projeto Angular na versão 19.2:
+
+```bash
+npx -p @angular/cli@19.2 ng new testando-http-resource
+```
+
+Escolha as opções desejadas durante a criação do projeto. Em seguida, adicione `provideHttpClient()` ao `appConfig`:
+
+```typescript
+// app.config.ts
+...
+import { provideHttpClient } from '@angular/common/http'
+
+export const appConfig: ApplicationConfig = {
+	providers: [
+		provideHttpClient(),
+		...
+	]
+}
+```
+
+**2. Implementação do AppComponent:**
+
+Agora, vamos modificar o `AppComponent` para buscar usuários por nome, utilizando o [`httpResource`](https://angular.dev/api/common/http/httpResource) e o [`FormsModule`](https://angular.dev/api/forms/FormsModule#).
+
+```typescript
+// app.component.ts
+import { httpResource } from '@angular/common/http'
+import { Component, signal } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+
+export interface User {
+	name: string
+	age: number
+	email: string
+}
+
+@Component({
+	selector: 'app-root',
+	imports: [FormsModule],
+	template: `
+		<fieldset>
+			<input type="text" [(ngModel)]="searchName" />
+		</fieldset>
+
+		@if (users.isLoading()) {
+			<span>Carregando...</span>
+		} @else {
+			<ul>
+				@for (user of users.value(); track user.email) {
+					<li>{{ user.name }} - {{ user.age }} - {{ user.email }}</li>
+				} @empty {
+					<span>Nenhum usuário encontrado!</span>
+				}
+			</ul>
+		}
+	`,
+	styles: []
+})
+export class AppComponent {
+	searchName = signal('')
+
+	users = httpResource<User[]>(() => {
+		const params = new URLSearchParams()
+
+		if (this.searchName()) {
+			params.append('name_like', this.searchName())
+		}
+
+		return `http://localhost:3000/users?${params.toString()}`
+	})
+}
+```
+
+**3. Explicação do Código:**
+
+- Utilizamos [`httpResource`](https://angular.dev/api/common/http/httpResource) para buscar uma lista de usuários de uma API local (JSON Server).
+- O `searchName` é um Signal que armazena o nome a ser buscado.
+- A URL da requisição é construída de forma dinâmica, utilizando `URLSearchParams` para adicionar o parâmetro `name_like` quando o `searchName` possui um valor.
+  > Note que o sufixo `_like` é uma funcionalidade do JSON Server para busca parcial.
+- O template exibe um input para inserir o nome, uma lista de usuários encontrados e uma mensagem de "Carregando..." enquanto a requisição está em andamento.
+
+**Vantagens do httpResource**
+
+- **Reatividade:** O [`httpResource`](https://angular.dev/api/common/http/httpResource) utiliza Signals para observar mudanças, tornando as requisições reativas.
+- **Controle de Estado:** Permite controlar o estado da requisição (carregando, erro, sucesso) através de Signals.
+- **Simplicidade:** Facilita o gerenciamento de requisições HTTP, especialmente em cenários dinâmicos.
+
+**Conclusão**
+
+O [`httpResource`](https://angular.dev/api/common/http/httpResource) é uma ferramenta poderosa para o controle de requisições HTTP no Angular 19.2. Ele oferece reatividade e simplicidade, facilitando o desenvolvimento de aplicações dinâmicas. Experimente essa nova funcionalidade em seus projetos e compartilhe sua experiência!
+
+Não se esqueça de <a href='javascript:void(0);' scroll-to="newsletter-form">se inscrever na nossa Newsletter</a> para receber todas as novidades sobre Angular e outras tecnologias.
