@@ -2,13 +2,12 @@
 import { type CollectionEntry, getCollection } from 'astro:content'
 import BlogPost from '@/layouts/BlogPost'
 import Code from '@/components/mdx/Code'
-import ListRelatedPosts from '@/components/ListRelatedPosts'
-import Share from '@/components/Share'
 import TableOfContents from '@/components/TableOfContents'
 import { getPosts } from '@/utils'
 import SButton from '@/components/mdx/SButton'
 import Author from '@/components/Author'
 import ListPosts from '@/components/ListPosts'
+import NewsletterForm from '@/components/NewsletterForm'
 
 const posts = await getCollection('blog')
 
@@ -53,6 +52,12 @@ const { Content, headings, remarkPluginFrontmatter } = await post.render()
 			<div class='prose prose-lg md:prose-xl dark:prose-invert mb-12 min-w-full'>
 				<Content components={{ pre: Code, SButton }} />
 			</div>
+
+			<div class='border-t opacity-30 mb-8'></div>
+
+			<NewsletterForm />
+
+			<div class='border-t opacity-30 mt-2'></div>
 
 			<div class='flex justify-center py-12'>
 				<Author authorId={post.data.authorId} />
