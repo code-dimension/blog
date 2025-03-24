@@ -1,0 +1,145 @@
+---
+heroImage: /images/posts/nx-release.jpg
+category: Nx
+description: 'Nx Release oferece uma solução poderosa para simplificar e automatizar o gerenciamento de releases de pacotes em monorepos que usam o Nx.'
+pubDate: '2025-03-23'
+draft: false
+tags:
+  - angular
+  - nx
+  - nx-release
+title: 'Nx Release: Simplificando o versionamento de pacotes!'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Em um ambiente de desenvolvimento de software moderno, o gerenciamento eficiente de múltiplos pacotes dentro de um único repositório (monorepo) tornou-se uma prática comum.
+
+O [Nx](https://nx.dev/) oferece um conjunto de ferramentas para auxiliar na construção e gerenciamento desses monorepos.
+
+Uma das funcionalidades importantes dentro do ecossistema [Nx](https://nx.dev/) é o [Nx Release](https://nx.dev/recipes/nx-release/get-started-with-nx-release), projetado para simplificar e automatizar o processo de lançamento de pacotes.
+
+## O Que é Nx Release?
+
+Nx Release é um recurso integrado ao Nx que facilita o gerenciamento do processo de versionamento, geração de changelogs e publicação de pacotes em um monorepo.
+
+Ele atua como um conjunto de ferramentas e utilitários acessíveis através da linha de comando do Nx .
+
+## Para Que Serve o Nx Release?
+
+O principal objetivo do Nx Release é otimizar e automatizar o fluxo de trabalho de lançamento para pacotes em um workspace Nx . Ele serve para:
+
+- **Automatizar o processo de lançamento**: Reduzindo o esforço manual e o risco de erros em tarefas repetitivas.
+- **Gerenciar o versionamento**: Determinando a próxima versão dos pacotes e atualizando as dependências internas .
+- **Gerar changelogs**: Criando automaticamente arquivos que detalham as mudanças em cada lançamento .
+- **Publicar pacotes**: Facilitando a disponibilização das novas versões em registros como o npm .
+- **Garantir a consistência**: Ajudando a manter a integridade entre os diferentes pacotes do monorepo.
+
+## Como Configurar o Nx Release
+
+A configuração do Nx Release envolve alguns passos essenciais:
+
+- **Instalação do Nx**: Certifique-se de que o Nx esteja instalado no seu monorepo .
+
+- **Adição do plugin @nx/js**: Esse plugin é necessário para gerenciar os pacotes. Instale-o com o comando: `nx add @nx/js` .
+
+- **Configuração dos Projetos para Release**: No arquivo `nx.json`, defina a propriedade `release.projects` com um array de strings para especificar quais pacotes devem ser incluídos no processo de lançamento. Você pode usar nomes de pacotes, tags Nx, diretórios ou padrões globais para filtrar . Por exemplo:
+
+```json
+{
+	"release": {
+		"projects": ["packages/*"]
+	}
+}
+```
+
+**Personalização das Operações Git (Opcional)**: Você pode personalizar a mensagem de commit e o padrão da tag Git no arquivo `nx.json` . Por exemplo:
+
+```json
+{
+	"release": {
+		"releaseTagPattern": "release/{version}",
+		"git": {
+			"commitMessage": "Release version {version}"
+		}
+	}
+}
+```
+
+## Como Mapear os Pacotes do Projeto com Nx Release
+
+O mapeamento dos pacotes do projeto é feito através da configuração da propriedade `release.projects` no arquivo `nx.json` .
+
+Esta propriedade permite definir quais pacotes dentro do seu workspace Nx serão considerados para o processo de release.
+
+Você pode especificar pacotes individualmente por nome, usar tags para agrupar pacotes ou utilizar padrões de diretório para incluir múltiplos pacotes de uma vez .
+
+## Como Configurar o Changelog
+
+O Nx Release automatiza a geração de changelogs com base nas mensagens de commit ou em arquivos de plano de versão .
+
+Ao seguir convenções de commit como o [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), o Nx Release pode gerar changelogs informativos e precisos automaticamente.
+
+## Como Configurar o Git
+
+A configuração do Git no Nx Release é feita através da seção `release.git` no arquivo `nx.json`.
+
+É possível personalizar a mensagem de commit que será utilizada durante o processo de lançamento com a propriedade `commitMessage`.
+
+Além disso, o padrão para as tags Git criadas pode ser configurado utilizando a propriedade `releaseTagPattern`.
+
+## Relacionamento Independente com Nx Release
+
+O Nx Release oferece a capacidade de gerenciar o versionamento e o lançamento de pacotes individuais de forma independente dentro do monorepo.
+
+Essa configuração permite que cada projeto siga seu próprio ciclo de vida de lançamento, o que pode ser útil em monorepos com pacotes que não precisam ser versionados ou lançados simultaneamente.
+
+## Como Executar o Nx Release
+
+A execução do Nx Release é feita através do comando `nx release` no terminal .
+
+Ao executar este comando, o Nx Release iniciará o processo de lançamento, solicitando informações como o tipo de incremento de versão (major, minor, patch) .
+
+Para o primeiro lançamento em um workspace, utilize a opção `--first-release`:
+
+```bash
+nx release --first-release
+```
+
+É altamente recomendado utilizar a opção `--dry-run` para simular o processo de lançamento e visualizar as alterações que seriam feitas sem efetivamente aplicá-las:
+
+```bash
+nx release --dry-run
+```
+
+Para lançar apenas um subconjunto de pacotes, utilize a opção `--projects` seguida pelos nomes dos pacotes separados por vírgula:
+
+```bash
+nx release --projects=projeto-1,projeto-2
+```
+
+## Como Executar o Nx Release com Subcomandos
+
+Para um controle mais granular sobre o processo de lançamento, o Nx Release oferece subcomandos que podem ser executados independentemente .
+
+Os principais subcomandos são:
+
+- `nx release version`: Responsável por determinar e atualizar as versões dos pacotes.
+- `nx release changelog`: Utilizado para gerar os arquivos de changelog.
+- `nx release publish`: Executa a publicação dos pacotes nos registros configurados.
+
+Cada um desses subcomandos possui suas próprias opções e pode ser explorado com a flag `--help`. Por exemplo:
+
+```bash
+nx release version --help
+nx release changelog --help
+nx release publish --help
+```
+
+## Conclusão
+
+Em resumo, o Nx Release é uma ferramenta poderosa para simplificar e automatizar o gerenciamento de releases em monorepos Nx.
+
+Sua configuração flexível e a capacidade de execução através de comandos simples ou subcomandos específicos o tornam uma solução valiosa para equipes que buscam eficiência e organização em seus processos de entrega de software.
