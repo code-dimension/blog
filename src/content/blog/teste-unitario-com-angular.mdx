@@ -1,0 +1,167 @@
+---
+title: 'Signals: O que é e como utilizar'
+description: Entenda como usar essa maravilhosa funcionalidade do Angular 16
+pubDate: '2025-07-03'
+heroImage: '/images/posts/1__b8XBKnnk9Eo1oDOfNIERyg.png'
+category: 'Angular'
+tags:
+  - angular
+draft: false
+authorId: 'henrique-custodia'
+---
+
+No universo do desenvolvimento de software, a busca por qualidade e confiabilidade é constante. Uma das práticas fundamentais para alcançar esses objetivos é o **teste unitário**. Mas o que exatamente ele significa e para que serve? Vamos mergulhar nesse conceito essencial.
+
+## O Que é Teste Unitário?
+
+O teste unitário é uma técnica de teste de software que se concentra em verificar a menor unidade testável de um aplicativo, isoladamente. Essa "unidade" pode ser uma função, um método, um procedimento ou qualquer pequena parte do código que possa ser logicamente isolada 1. O objetivo principal é garantir que cada uma dessas unidades funcione corretamente, de acordo com o esperado 1.
+
+Imagine a construção de uma casa. Antes de juntar as paredes, o pedreiro verifica se cada tijolo está em boas condições. O teste unitário funciona de maneira similar: cada "tijolo" (unidade de código) é examinado individualmente para garantir sua integridade antes de ser integrado ao sistema maior.
+
+Os testes unitários são tipicamente escritos por desenvolvedores e executados frequentemente durante o processo de desenvolvimento 13. Eles geralmente são automatizados, o que permite uma verificação rápida e consistente da funcionalidade do código a cada alteração 2. Para garantir o isolamento da unidade testada, dependências externas, como bancos de dados ou outros serviços, são frequentemente simuladas (mocked) durante o teste 3.
+
+## Para Que Serve o Teste Unitário?
+
+O teste unitário serve a múltiplos propósitos, todos cruciais para a construção de software de alta qualidade:
+
+**1. Detecção Precoce de Bugs:** Uma das maiores vantagens do teste unitário é a capacidade de identificar e corrigir erros (bugs) nas fases iniciais do desenvolvimento 18. Encontrar um bug no nível da unidade é muito mais fácil e barato de corrigir do que descobri-lo em etapas posteriores, como testes de integração ou em produção 18.
+
+**2. Melhoria da Qualidade do Código:** A prática de escrever testes unitários força os desenvolvedores a pensarem no design e na estrutura do código de forma mais clara e modular 18. Um código bem testado tende a ser mais limpo, estruturado, confiável e fácil de manter 18.
+
+**3. Facilitação da Refatoração:** Com um conjunto abrangente de testes unitários, os desenvolvedores podem refatorar (reorganizar e melhorar o código sem alterar sua funcionalidade externa) com mais segurança 18. Se a refatoração introduzir algum bug, os testes unitários falharão, alertando o desenvolvedor sobre o problema 18.
+
+**4. Documentação Viva do Código:** Os testes unitários servem como uma forma de documentação do código 18. Eles demonstram como cada unidade de código deve ser usada e qual o seu comportamento esperado para diferentes entradas 18.
+
+**5. Aumento da Confiança:** A existência de testes unitários bem-sucedidos aumenta a confiança dos desenvolvedores e da equipe na qualidade e estabilidade do software 18. Eles têm a garantia de que as unidades individuais estão funcionando corretamente 18.
+
+**6. Suporte ao Desenvolvimento Ágil e CI/CD:** Os testes unitários são uma parte fundamental das metodologias ágeis e dos pipelines de Integração Contínua e Entrega Contínua (CI/CD) 2. Eles permitem a automação da verificação da qualidade do código a cada alteração, garantindo um feedback rápido e evitando a introdução de regressões 2.
+
+## Diferença entre Teste Unitário, Teste de Integração e Teste de End-to-End
+
+Embora o teste unitário seja crucial, ele é apenas um dos tipos de testes existentes no ciclo de desenvolvimento de software. Para garantir a qualidade em diferentes níveis, outros tipos de testes são necessários. Vamos entender a diferença entre o teste unitário e outros dois tipos importantes: teste de integração e teste de ponta a ponta (end-to-end).
+
+### **Teste de Integração**
+
+O **teste de integração** foca em verificar a interação e a comunicação entre diferentes módulos ou componentes de um aplicativo 2. Enquanto o teste unitário examina unidades isoladas, o teste de integração testa como essas unidades funcionam juntas 2. O objetivo é detectar problemas na troca de dados, na comunicação entre módulos e na compatibilidade de interfaces 2.
+
+### **Teste de Ponta a Ponta (End-to-End)**
+
+O **teste de ponta a ponta (E2E)** adota uma visão completa do sistema, simulando cenários de usuários reais para validar o fluxo da aplicação do início ao fim 2. Ele verifica se todos os componentes da aplicação, incluindo a interface do usuário, serviços de backend e bancos de dados, funcionam juntos conforme o esperado do ponto de vista do usuário 2.
+
+### **Tabela de Comparação**
+
+Para ilustrar melhor as diferenças, veja a tabela abaixo:
+
+| Característica         | Teste Unitário                               | Teste de Integração                          | Teste de Ponta a Ponta (E2E)                            |
+| :--------------------- | :------------------------------------------- | :------------------------------------------- | :------------------------------------------------------ |
+| **Escopo**             | Menor unidade de código (função, método)     | Interação entre módulos ou serviços          | Fluxo completo do usuário na aplicação                  |
+| **Foco**               | Lógica interna de unidades isoladas          | Comunicação e interação entre componentes    | Experiência do usuário e fluxo completo da aplicação    |
+| **Isolamento**         | Alto (uso de mocks/stubs)                    | Médio (algumas dependências podem ser reais) | Baixo (testa o sistema como um todo)                    |
+| **Velocidade**         | Rápido                                       | Moderado                                     | Lento                                                   |
+| **Custo**              | Baixo                                        | Moderado                                     | Alto                                                    |
+| **Quem Escreve**       | Geralmente desenvolvedores                   | Desenvolvedores e/ou testers                 | Geralmente testers e/ou ferramentas automatizadas       |
+| **Objetivo Principal** | Verificar a correção de unidades individuais | Garantir que os módulos funcionem juntos     | Validar o sistema completo sob a perspectiva do usuário |
+
+Em resumo, o teste unitário é a base para garantir a qualidade do código em um nível granular, enquanto o teste de integração verifica a colaboração entre diferentes partes do sistema, e o teste de ponta a ponta valida a experiência completa do usuário. Os três tipos de testes são complementares e essenciais para construir software robusto e confiável.
+
+## **Criando Testes Unitários com Jest em Angular**
+
+Para criar testes unitários eficazes em Angular utilizando o Jest, você normalmente organiza seus testes dentro de uma **suite de testes**. O Jest fornece algumas funções globais para estruturar seus testes:
+
+- **describe(name, fn):** Agrupa testes relacionados sob um nome específico. Isso ajuda a organizar seus testes e torna a saída do teste mais legível 18. O name é uma string que descreve o que está sendo testado (geralmente o nome do componente, serviço ou pipe), e fn é uma função que contém os testes individuais.
+- **it(name, fn):** Define um caso de teste individual dentro de um bloco describe. O name é uma string que descreve o comportamento esperado da unidade sob teste, e fn é uma função que contém as asserções para verificar esse comportamento 18.
+- **beforeEach(fn):** Uma função que é executada antes de cada teste (it) dentro do bloco describe. É comumente usada para configurar o ambiente de teste, como instanciar o componente ou serviço que será testado 1.
+
+\*\*Exemplo de uma Suite de Testes com Jest:
+
+```typescript
+describe('MeuComponente', () => {
+	let componente: MeuComponente
+	beforeEach(() => {
+		componente = new MeuComponente()
+	})
+	it('deve ter uma propriedade chamada mensagem com o valor "Olá"', () => {
+		expect(componente.mensagem).toBe('Olá')
+	})
+	it('deve retornar "Olá Mundo" quando o método saudar for chamado', () => {
+		expect(componente.saudar()).toBe('Olá Mundo')
+	})
+})
+```
+
+Neste exemplo, `MeuComponente` é o nome da suite de testes. O `beforeEach` garante que uma nova instância de `MeuComponente` seja criada antes de cada teste. Os blocos `it` definem dois testes individuais para verificar a propriedade `mensagem` e o método `saudar` do componente.
+
+\#\# Utilizando TestBed e APIs de Asserção do Jest para Testar Componentes Angular
+
+Para testar componentes Angular, você frequentemente utilizará o `TestBed`, uma ferramenta fornecida pelo Angular para configurar e criar instâncias de componentes em um ambiente de teste \[1, 3\]. O `TestBed` permite simular o ambiente Angular e injetar dependências necessárias para o seu componente.
+
+**Passos Típicos para Testar um Componente Angular com Jest e TestBed:**
+
+1.  **Importar `TestBed` e o componente a ser testado:**
+
+    ```typescript
+    import { TestBed, ComponentFixture } from '@angular/core/testing'
+    import { MeuComponente } from './meu.componente'
+    ```
+
+2.  **Configurar o módulo de teste dentro do bloco `describe`:** Utilize `TestBed.configureTestingModule` para declarar o componente que você quer testar e quaisquer outros módulos, componentes, serviços ou pipes dos quais ele dependa \[1, 3\].
+
+    ```typescript
+    describe('MeuComponente', () => {
+      let componente: MeuComponente;
+      let fixture: ComponentFixture\<MeuComponente\>;
+
+      beforeEach(async () => {
+        await TestBed.configureTestingModule({
+          declarations: \[ MeuComponente \]
+        })
+        .compileComponents();
+      });
+    ```
+
+    - `TestBed.configureTestingModule` recebe um objeto com metadados semelhantes a um `@NgModule`. Aqui, você geralmente declara o componente que está testando no array `declarations`.
+    - `compileComponents()` compila os templates HTML e os estilos CSS do componente \[1, 4\]. Isso é especialmente importante se você estiver usando templates ou estilos externos.
+
+3.  **Criar uma instância do componente usando `TestBed.createComponent`:** Isso retorna um `ComponentFixture`, que é um wrapper para a instância do seu componente e seu template \[1, 3\].
+
+    ```typescript
+    beforeEach(() => {
+      fixture \= TestBed.createComponent(MeuComponente);
+      componente \= fixture.componentInstance;
+    });
+    ```
+
+    - `fixture.componentInstance` fornece acesso à instância da classe do seu componente.
+    - `fixture` também oferece métodos para interagir com o template renderizado do componente, como `detectChanges()` para forçar a detecção de mudanças e atualizar o DOM \[1, 3\].
+
+4.  **Escrever os testes utilizando as APIs de asserção do Jest:** Dentro dos blocos `it`, você pode interagir com a instância do componente (`componente`) e seu template (através de `fixture`) e usar as funções de asserção do Jest (`expect`) para verificar se o comportamento é o esperado \[18, 1, 63\].
+
+    ```typescript
+    it('deve criar o componente', () => {
+      expect(componente).toBeTruthy();
+    });
+
+    it('deve ter a propriedade titulo com o valor "Teste"', () => {
+      componente.titulo \= 'Teste';
+      fixture.detectChanges(); // Força a atualização do template
+      const elementoTitulo: HTMLElement \= fixture.nativeElement.querySelector('h1');
+      expect(elementoTitulo.textContent).toContain('Teste');
+    });
+
+    it('deve chamar o método aoClicar quando o botão for clicado', () => {
+      spyOn(componente, 'aoClicar'); // Cria um "espião" no método
+      const botao: HTMLButtonElement \= fixture.nativeElement.querySelector('button');
+      botao.click();
+      expect(componente.aoClicar).toHaveBeenCalled();
+    });
+    ```
+
+    - `expect(valor).matcher()`: A estrutura básica de uma asserção no Jest. `valor` é o que você está testando, e `matcher` é uma função que compara o valor com o resultado esperado (por exemplo, `toBe()`, `toEqual()`, `toBeTruthy()`, `toBeFalsy()`, `toContain()`, `toHaveBeenCalled()`, etc.) \[18, 1, 63\].
+    - `fixture.nativeElement`: Fornece acesso ao elemento DOM raiz do componente. Você pode usar métodos DOM padrão como `querySelector` para selecionar elementos no template renderizado \[1, 3\].
+    - `fixture.debugElement`: Oferece uma maneira mais Angular de interagir com o DOM, fornecendo acesso a metadados e permitindo a consulta de elementos usando seletores CSS ou diretivas \[1, 3\].
+    - `fixture.detectChanges()`: Aciona o ciclo de detecção de mudanças do Angular para atualizar o template com base nas alterações nas propriedades do componente \[1, 3\].
+    - `spyOn(objeto, 'metodo')`: Cria um "espião" em um método de um objeto. Isso permite rastrear se o método foi chamado, quantas vezes foi chamado e com quais argumentos \[1, 3\].
+
+Ao combinar as funcionalidades do Jest para estruturar seus testes com o `TestBed` do Angular para configurar o ambiente de teste de componentes e as APIs de asserção do Jest para verificar o comportamento esperado, você pode criar testes unitários robustos e eficazes para suas aplicações Angular.
+
+Em suma, o teste unitário transcende a mera detecção de falhas; ele é um investimento estratégico na robustez, manutenibilidade e evolução de qualquer aplicação Angular \[18, 1, 2, 3, 26, 5, 6, 7, 15, 13, 19, 11, 20, 21, 22, 12, 23, 24, 25\]. Ao garantir a correção e o comportamento esperado de cada componente individual, estabelecemos uma base sólida para a construção de sistemas complexos e confiáveis \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\]. A adoção de uma suite de testes bem estruturada com Jest, aliada ao poder do TestBed do Angular, capacita os desenvolvedores a entregar software de alta qualidade com confiança e eficiência .
