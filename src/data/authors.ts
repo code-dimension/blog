@@ -27,6 +27,13 @@ export const authors = [
 		description: 'Front-End Developer | ReactJS | React Native | Typescript | Angular |',
 		image: '/images/authors/manuel.jpeg',
 		gender: AuthorGender.Male
+	},
+	{
+		id: 'moises-bueno',
+		name: 'Moisés Bueno',
+		description: 'Back-End Developer | .NET | C# | Sql Server |',
+		image: '/images/authors/moises.jpeg',
+		gender: AuthorGender.Male
 	}
 ]
 
