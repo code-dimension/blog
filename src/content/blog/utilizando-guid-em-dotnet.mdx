@@ -1,0 +1,56 @@
+---
+title: 'Utilizando guid em dotnet'
+description: Entendendo a melhor de forma usar guid na plataforma .net sem afetar o banco de dados
+pubDate: '2025-04-04'
+heroImage: '/images/posts/guid-dotnet.png'
+category: 'dotnet'
+tags:
+  - dotnet
+draft: false
+authorId: 'moises-bueno'
+---
+
+Quando estamos desenhando um banco de dados nos vem o seguinte problema,
+nas nossas chaves primárias vamos usar o que, muitos sistemas utilizando a abordagem de um UUID
+que é um identificador universal único, projetado para não haver colisão, ou seja não existir o mesmo id.
+
+## Mas o que é um guid?
+
+Guid é uma implementação deste identificador, temos guids em varios locais, como documentos, contas e etc
+
+## Como usar Guid em dotnet?
+
+A plataforma dotnet já tem uma implementação pronta e simples para a utilização, basta utilizar
+
+```cs
+   Guid.NewGuid()
+```
+
+## Qual o problema causado pela linha anterior ?
+
+Aparentemente não vemos o problema, mas é no detalhes que eles se escondem,
+começamos a popular nosso banco de dados, como cada guid é gerado de forma aleatória,
+criamos um problema de busca e ordernação no banco de dados.
+
+## Mas como resolver este problema
+
+- Podemos usar a biblioteca SecurityDriven.FastGuid
+- Podemos usar a biblioteca Cysharp/Ulid
+- Ou a implementação do Guid na versão 7, está versão utilizando o timestamp atual para geração do guid
+
+```cs
+   Guid.CreateVersion7()
+```
+
+## Conclusão
+
+Percebemos que dependendo da nossa abordagem ou passamos um carga excessiva para o banco de dados,
+fazendo o mesmo ficar lento ao manipular os registros, essa abordagem da utlização do guid em sua versão 7 está disponível
+somente na versão 9 do dotnet, caso queria utilizar id's aleatorios, sugiro a utilização das libs citadas.
+
+## Referências
+
+https://betterexplained.com/articles/the-quick-guide-to-guids/
+https://learn.microsoft.com/en-us/dotnet/api/system.guid?view=net-9.0
+https://github.com/Cysharp/Ulid
+https://github.com/sdrapkin/SecurityDriven.FastGuid
