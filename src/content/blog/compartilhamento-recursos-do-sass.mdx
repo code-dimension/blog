@@ -1,0 +1,130 @@
+---
+heroImage: /images/posts/Compartilhar-recursos-Sass-Entre-componentes.jpg
+category: Angular
+description: 'Nesse artigo você vai aprender como compartilhar recursos do Sass, como mixins, funções e variáveis entre componentes Angular'
+pubDate: '2025-04-24'
+draft: false
+tags:
+  - angular
+  - sass
+title: 'Compartilhamento de Recursos do Sass entre Componentes Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+[Sass](https://sass-lang.com/) é um preprocessador CSS que permite criar estilos reutilizáveis e modularizados.
+
+Essa ferramenta oferece recursos como mixins, funções e variáveis, que podem ser utilizados em diferentes partes do seu código.
+
+Uma das necessidades mais comuns dos desenvolvedores que utilizam [Angular](https://angular.dev/), é a capacidade de compartilhar recursos do Sass entre componentes.
+
+Nesse artigo você vai aprender como compartilhar recursos do [Sass](https://sass-lang.com/) entre diferentes componentes,
+tornando esses recursos acessíveis em qualquer lugar da sua aplicação.
+
+## Criando um mixin
+
+### O que é um mixin?
+
+Um [mixin](https://sass-lang.com/documentation/at-rules/mixin/) em Sass é uma função que aplica um bloco de css dentro de outro bloco de css.
+
+Esse recurso é muito útil em cenários onde algum estilo precisa ser reutilizado em diferentes partes da sua aplicação.
+
+### Mixin para media queries
+
+Vamos criar um mixin que vai padronizar o uso de [media queries](https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_media_queries/Using_media_queries), permitindo com que você informe apenas um breakpoint e
+então um bloco de css seja configurado corretamente.
+
+```scss
+// src/styles/mixins.scss
+@use 'sass:map';
+
+// cria um mapa de breakpoints
+$breakpoints: (
+	'sm': 640px,
+	'md': 768px,
+	'lg': 1024px,
+	'xl': 1280px,
+	'xxl': 1536px
+);
+
+// cria um mixin para media queries que recebe um breakpoint
+@mixin media-query($breakpoint) {
+	@media screen and (min-width: map.get($breakpoints, $breakpoint)) {
+		@content;
+	}
+}
+```
+
+Note que o código acima contém um mapa de breakpoints (`$breakpoints`) que contém as larguras de tela onde as medias queries vão atuar.
+
+O mixin `media-query` deve receber um breakpoint desse mapa e configurar a media query corretamente.
+
+<Ads />
+
+## Compartilhando mixin entre componentes Angular
+
+Para compartilhar recursos criados com Sass entre componentes Angular, você precisa apenas configurar um mapeamento no arquivo `angular.json`.
+
+```json
+{
+  "projects": {
+    "<seu-app>": {
+      "architect": {
+        "build": {
+          ...
+          "options": {
+             ...
+             "stylePreprocessorOptions": {
+                "includePaths": [
+                  "src/styles" // caminho do diretório de estilos
+                ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Note que estamos mapeando o diretório onde os arquivos Sass da aplicação estão localizados (`src/styles`).
+
+Dessa forma, podemos importar qualquer recurso que esteja dentro do diretório mapeado e
+utilizar qualquer componente Angular na sua aplicação.
+
+## Usando recursos do Sass em componentes Angular
+
+Agora você pode importar o mixin `media-query` em um componente Angular da sua aplicação de forma super simples!
+
+```scss
+// src/app/components/card/card.component.scss
+@use 'media-query' as mq;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: 16px;
+
+	// utiliza o mixin "media-query"
+	@include mq.media-query(md) {
+		flex-direction: row;
+	}
+}
+```
+
+Note que estamos importando o mixin `media-query` usando o caminho relativo ao diretório de estilos da aplicação.
+
+Como mapeamos no arquivo `angular.json` o caminho `src/styles` para o diretório de estilos da aplicação, a importação do mixin será feita corretamente,
+pois o mixin se encontra no caminho `src/styles/mixins.scss`.
+
+## Conclusão
+
+Com isso, vocé vai aprender como compartilhar recursos do [Sass](https://sass-lang.com/) entre componentes Angular,
+tornando-os acessíveis em qualquer lugar da sua aplicação.
+
+Essa prática é extremamente importante para desenvolvedores Angular, pois permite que eles reutilizem estilos e componentes em diferentes partes da sua aplicação,
+sem precisar duplicar o código.
+
+Obrigado por ler esse artigo e até a próxima! 🫡
