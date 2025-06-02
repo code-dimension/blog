@@ -1,0 +1,271 @@
+---
+heroImage: /images/posts/angular-20-banner.webp
+category: Angular
+description: 'Descubra as novas funcionalidades e melhorias introduzidas no Angular 20, incluindo avanços em performance, novos recursos de desenvolvimento e otimizações para uma experiência de desenvolvimento ainda mais fluida e eficiente.'
+pubDate: '2025-06-02'
+draft: false
+tags:
+  - angular
+title: 'Angular 20: Conheça as novidades!'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+## Angular v20: Novidades e Aprimoramentos
+
+A versão 20 do Angular introduz um conjunto de novas funcionalidades, aprimoramentos na experiência de desenvolvimento e a estabilização de recursos previamente introduzidos.
+
+Esta release visa consolidar a plataforma e otimizar o fluxo de trabalho para desenvolvedores.
+
+### Estabilização de APIs Reativas e de Renderização
+
+A v20 marca a promoção à estabilidade de diversas APIs fundamentais:
+
+- **Reactivity Primitives:** As APIs `effect`, `linkedSignal` e `toSignal` alcançaram o status de estável, oferecendo mecanismos robustos para a gestão de estado reativo.
+
+  ```typescript
+  import { signal, effect } from '@angular/core'
+
+  const counter = signal(0)
+  effect(() => {
+  	console.log(`Current count: ${counter()}`)
+  })
+
+  counter.update((n) => n + 1)
+  ```
+
+- **Incremental Hydration:** A estratégia de hidratação progressiva do client-side agora é considerada estável, configurável via `provideClientHydration(withIncrementalHydration())`. A diretiva `@defer` nos templates permite o carregamento e hidratação sob demanda.
+
+  ```typescript
+  import { bootstrapApplication } from '@angular/platform-browser'
+  import { AppComponent } from './app/app.component'
+  import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser'
+
+  bootstrapApplication(AppComponent, {
+  	providers: [provideClientHydration(withIncrementalHydration())]
+  })
+  ```
+
+  ```html
+  @defer (on viewport) {
+  <app-heavy-component />
+  } @placeholder { Loading... }
+  ```
+
+- **SSR Route-Level Configuration:** A capacidade de definir a estratégia de renderização no servidor por rota (`RenderMode`) é agora uma API estável, configurada através da propriedade `data.renderMode` nas definições de rota.
+
+  ```typescript
+  export const routeConfig: ServerRoute = [
+  	{ path: '/login', mode: RenderMode.Server },
+  	{ path: '/dashboard', mode: RenderMode.Client },
+  	{
+  		path: '/product/:id',
+  		mode: RenderMode.Prerender,
+  		async getPrerenderParams() {
+  			const dataService = inject(ProductService)
+  			const ids = await dataService.getIds() // ["1", "2", "3"]
+  			// `id` is used in place of `:id` in the route path.
+  			return ids.map((id) => ({ id }))
+  		}
+  	}
+  ]
+  ```
+
+### Zoneless Change Detection em Developer Preview
+
+O modelo de detecção de mudanças sem a dependência de Zone.js avança para o status de _developer preview_, habilitado através de `provideZonelessChangeDetection()`.
+
+```typescript
+import { bootstrapApplication } from '@angular/platform-browser'
+import { AppComponent } from './app/app.component'
+import { provideZonelessChangeDetection, provideBrowserGlobalErrorListeners } from '@angular/core'
+
+bootstrapApplication(AppComponent, {
+	providers: [provideZonelessChangeDetection(), provideBrowserGlobalErrorListeners()]
+})
+```
+
+Além disso, é possível adicionar o zoneless na criação de um novo projeto com o comando <br /> `ng new`:
+
+![Adicionando Zoneless Change Detection](https://miro.medium.com/v2/resize:fit:720/format:webp/0*YbIjbBRAfcoiLemp)
+
+### Adições à Sintaxe de Templates
+
+A linguagem de templates do Angular foi expandida com novos operadores e funcionalidades:
+
+- Suporte a _untagged_ template literals para interpolação de strings.
+
+  ```html
+  <img [src]="`/assets/images/user-${userId()}.png`" />
+  ```
+
+- Implementação dos operadores aritmético de exponenciação (`**`) e lógico `in`.
+
+  ```html
+  <div>{{ base ** exponent }}</div>
+  <div *ngIf="'propertyName' in object">Property exists</div>
+  ```
+
+- Introdução do operador `void` para descarte explícito de valores de retorno de event listeners.
+
+  ```typescript
+  import { Directive, HostListener } from '@angular/core'
+
+  @Directive({
+  	host: {
+  		'(click)': 'void handleClick()'
+  	}
+  })
+  export class NoPreventDefaultDirective {
+  	handleClick(): boolean {
+  		console.log('Handling click.')
+  		return false // Without void, this would call preventDefault
+  	}
+  }
+  ```
+
+<Ads />
+
+### Aprimoramentos na Experiência de Desenvolvimento
+
+- Implementação de _type checking_ para _host bindings_, configurável via `typeCheckHostBindings` no `angularCompilerOptions` do `tsconfig.json`.
+
+  ```json
+  {
+  	"angularCompilerOptions": {
+  		"typeCheckHostBindings": true
+  	}
+  }
+  ```
+
+  ![Exemplo de uso da validação de typeCheckHostBindings](https://miro.medium.com/v2/resize:fit:720/format:webp/0*TeTw-n02HxtoCJtY)
+
+- Refinamento da API do componente `NgComponentOutlet` através da introdução de inputs declarativos.
+
+  ```typescript
+  import { Component, Input, Type } from '@angular/core'
+  import { NgComponentOutlet } from '@angular/common'
+
+  interface DynamicData {
+  	message: string
+  }
+
+  @Component({
+  	selector: 'app-dynamic-component',
+  	template: `<p>{{ data.message }}</p>`
+  })
+  export class DynamicComponent {
+  	@Input() data!: DynamicData
+  }
+
+  @Component({
+  	selector: 'app-root',
+  	template: `
+  		<ng-container
+  			[ngComponentOutlet]="dynamicComponentType"
+  			[ngComponentOutletInputs]="{ data: dynamicInput }"
+  		></ng-container>
+  	`
+  })
+  export class AppComponent {
+  	dynamicComponentType: Type<DynamicComponent> = DynamicComponent
+  	dynamicInput: DynamicData = { message: 'Data from parent component' }
+  }
+  ```
+
+### Suporte experimental para vitest
+
+Com a depreciação do Karma, o Angular CLI agora oferece suporte experimental para o vitest como um substituto para testes automatizados.
+
+Para usar Vitest, execute:
+
+```bash
+npm i vitest jsdom --save-dev
+```
+
+Atualize o arquivo `angular.json`:
+
+```json
+"test": {
+    "builder": "@angular/build:unit-test",
+    "options": {
+        "tsConfig": "tsconfig.spec.json",
+        "buildTarget": "::development",
+        "runner": "vitest"
+    }
+}
+```
+
+Será atualizar também os testes do projeto para utilizar as funções do Vitest:
+
+```ts
+...
+import { describe, beforeEach, it, expect } from 'vitest';
+...
+```
+
+### Atualizações no Guia de Estilo
+
+O guia de estilo do Angular foi atualizado para modernizá-lo e simplificá-lo, com base no feedback da comunidade (RFC). As principais mudanças incluem:
+
+- Remoção de práticas de "code health" não específicas do Angular.
+- Movimentação de melhores práticas do Angular (não relacionadas a estilo) para a documentação.
+- Sufixos de nomes de arquivos e classes tornaram-se opcionais para reduzir código repetitivo e incentivar nomes mais intencionais.
+
+A partir do Angular v20, o Angular CLI não gerará sufixos por padrão. Projetos existentes podem habilitá-los via `ng update`.
+
+Para novos projetos, a geração de sufixos pode ser ativada com a seguinte configuração no `angular.json`:
+
+```json
+  "projects": {
+    "app": {
+      // ...
+      "schematics": {
+        "@schematics/angular:component": { "type": "component" },
+        "@schematics/angular:directive": { "type": "directive" },
+        "@schematics/angular:service": { "type": "service" },
+        "@schematics/angular:guard": { "typeSeparator": "." },
+        "@schematics/angular:interceptor": { "typeSeparator": "." },
+        "@schematics/angular:module": { "typeSeparator": "." },
+        "@schematics/angular:pipe": { "typeSeparator": "." },
+        "@schematics/angular:resolver": { "typeSeparator": "." }
+      },
+      // ...
+    }
+  }
+```
+
+Refletindo a evolução do Angular, a maior parte das orientações sobre `NgModules` foi removida.
+
+O uso de `@HostBinding` e `@HostListener` foi revisto, favorecendo o objeto host nos metadados da diretiva, e lacunas no suporte a host binding foram corrigidas.
+
+### Breaking Changes e Deprecações
+
+A atualização para a v20 implica em algumas alterações que exigem atenção:
+
+- Atualização das _peer dependencies_ para Node.js, TypeScript e RxJS.
+- Remoção da emissão de atributos `ng-reflect-*` em modo de desenvolvimento.
+- Remoção da API `InjectFlags`.
+
+  ```typescript
+  import { inject, Optional, Host } from '@angular/core'
+  import { ParentComponent } from './parent.component'
+
+  export class ChildComponent {
+  	parent = inject(ParentComponent, { optional: true, host: true })
+  }
+  ```
+
+- Depreciação do suporte oficial ao HammerJS.
+
+### Conclusão
+
+O Angular v20 representa um marco significativo na evolução contínua do framework, focando na estabilização de recursos poderosos, na modernização da experiência de desenvolvimento e na preparação para o futuro com inovações como a detecção de mudanças sem `Zone.js`.
+
+As melhorias nas APIs reativas e de renderização, juntamente com as adições à sintaxe de templates e o suporte experimental ao `Vitest`, demonstram o compromisso da equipe do Angular em fornecer uma plataforma robusta, eficiente e agradável para os desenvolvedores.
+
+Embora a atualização traga algumas breaking changes e deprecações, os benefícios em termos de performance, produtividade e alinhamento com as práticas modernas de desenvolvimento web certamente compensarão o esforço de migração.
+
+O Angular v20 consolida sua posição como um framework de ponta, pronto para enfrentar os desafios dos projetos web mais exigentes.
