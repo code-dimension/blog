@@ -39,19 +39,17 @@ A v20 marca a promoção à estabilidade de diversas APIs fundamentais:
 - **Incremental Hydration:** A estratégia de hidratação progressiva do client-side agora é considerada estável, configurável via `provideClientHydration(withIncrementalHydration())`. A diretiva `@defer` nos templates permite o carregamento e hidratação sob demanda.
 
   ```typescript
-  import { bootstrapApplication } from '@angular/platform-browser'
-  import { AppComponent } from './app/app.component'
   import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser'
-
-  bootstrapApplication(AppComponent, {
-  	providers: [provideClientHydration(withIncrementalHydration())]
-  })
+  // ...
+  provideClientHydration(withIncrementalHydration())
   ```
 
+  Nos templates você pode usar a diretiva `@defer` para hidratar partes do template sob demanda.
+
   ```html
-  @defer (on viewport) {
-  <app-heavy-component />
-  } @placeholder { Loading... }
+  @defer (hydrate on viewport) {
+  <shopping-cart />
+  }
   ```
 
 - **SSR Route-Level Configuration:** A capacidade de definir a estratégia de renderização no servidor por rota (`RenderMode`) é agora uma API estável, configurada através da propriedade `data.renderMode` nas definições de rota.
@@ -72,6 +70,74 @@ A v20 marca a promoção à estabilidade de diversas APIs fundamentais:
   	}
   ]
   ```
+
+## Novo Recurso experimental
+
+Agora, vamos supor que estamos recebendo dados de uma conexão WebSocket.
+
+Para este propósito, podemos usar um recurso de streaming:
+
+```ts
+@Component({
+	template: `{{ dataStream.value() }}`
+})
+export class App {
+	// Lógica de inicialização do WebSocket irá aqui...
+	// ...
+	// Inicialização do recurso de streaming
+	dataStream = resource({
+		stream: () => {
+			return new Promise<Signal<ResourceStreamItem<string[]>>>((resolve) => {
+				const resourceResult = signal<{ value: string[] }>({
+					value: []
+				})
+
+				this.socket.onmessage = (event) => {
+					resourceResult.update((current) => ({
+						value: [...current.value, event.data]
+					}))
+				}
+
+				resolve(resourceResult)
+			})
+		}
+	})
+}
+```
+
+Nesse exemplo minimalista, declaramos um novo recurso de streaming, que retorna uma `Promise` de um Signal.
+
+O Signal tem um tipo de valor `ResourceStreamItem<string[]>`, que significa que o Signal pode ter o valor `{ value: string[] }` ou `{error: … }` em caso de erro.
+
+Emitimos os valores recebidos sobre a conexão WebSocket via o Signal `resourceResult`.
+
+Agora, vamos criar um exemplo mais interessante, usando o recurso `httpResource` experimental:
+
+```ts
+@Component({
+	template: `{{ userResource.value() | json }}`
+})
+class UserProfile {
+	userId = signal(1)
+	userResource = httpResource<User>(() => `https://example.com/v1/users/${this.userId()}`)
+}
+```
+
+O snippet acima irá enviar uma solicitação HTTP GET para a URL especificada sempre que o userId mudar.
+
+O `httpResource` retorna um `HttpResourceRef` que tem uma propriedade value do tipo Signal que podemos acessar diretamente no template.
+
+O `userResource` tem outros valores, como isLoading, headers e outros, como se vê abaixo.
+
+Por baixo dos panos, o `httpResource` usa o `HttpClient`, portanto você pode especificar interceptores no provedor de `HttpClient`:
+
+```ts
+bootstrapApplication(AppComponent, {
+	providers: [provideHttpClient(withInterceptors([loggingInterceptor, cachingInterceptor]))]
+})
+```
+
+<Ads />
 
 ### Zoneless Change Detection em Developer Preview
 
@@ -125,8 +191,6 @@ A linguagem de templates do Angular foi expandida com novos operadores e funcion
   	}
   }
   ```
-
-<Ads />
 
 ### Aprimoramentos na Experiência de Desenvolvimento
 
