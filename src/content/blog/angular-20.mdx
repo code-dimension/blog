@@ -204,6 +204,8 @@ A linguagem de templates do Angular foi expandida com novos operadores e funcion
   }
   ```
 
+  No gif abaixo, vemos um exemplo de uso da validação de `typeCheckHostBindings`.
+
   ![Exemplo de uso da validação de typeCheckHostBindings](https://miro.medium.com/v2/resize:fit:720/format:webp/0*TeTw-n02HxtoCJtY)
 
 - Refinamento da API do componente `NgComponentOutlet` através da introdução de inputs declarativos.
@@ -238,6 +240,52 @@ A linguagem de templates do Angular foi expandida com novos operadores e funcion
   	dynamicInput: DynamicData = { message: 'Data from parent component' }
   }
   ```
+
+- Para criar dinamicamente um componente Angular, você pode usar a função `createComponent`.
+
+  Na versão 20, foi introduzido novos recursos que permitem aplicar diretivas e especificar associações a componentes criados dinamicamente:
+
+  ```ts
+  import { createComponent, signal, inputBinding, outputBinding } from '@angular/core'
+
+  const canClose = signal(false)
+  const title = signal('Título do meu diálogo')
+
+  // Criar MyDialog
+  createComponent(MyDialog, {
+  	bindings: [
+  		// Vincular um signal ao input `canClose`.
+  		inputBinding('canClose', canClose),
+
+  		// Ouvir especificamente o evento `onClose` no diálogo.
+  		outputBinding<Result>('onClose', (result) => console.log(result)),
+
+  		// Cria vinculação bidirecional com a propriedade title
+  		twoWayBinding('title', title)
+  	],
+  	directives: [
+  		// Aplicar a diretiva `FocusTrap` ao `MyDialog` sem quaisquer associações.
+  		FocusTrap,
+
+  		// Aplicar a diretiva `HasColor` ao `MyDialog` e vincular o valor `red` ao seu input `color`.
+  		// O callback para `inputBinding` é invocado em cada detecção de mudança.
+  		{
+  			type: HasColor,
+  			bindings: [inputBinding('color', () => 'red')]
+  		}
+  	]
+  })
+  ```
+
+  Acima, criamos um componente de Dialog e especificamos:
+
+  - Vinculamos um signal ao input `canClose` da Dialog.
+  - Escutamos o evento `onClose` usnado um callback que registra o resultado emitido.
+  - Criamos two-data binding entre a input `title` da Dialog e o signal `title` usando a função `twoWayBinding`.
+
+  Além disso, adicionamos as diretivas `FocusTrap` e `HasColor` ao componente.
+
+  Observe que também podemos vincular valores para inputs da diretiva `HasColor` que aplicamos ao `MyDialog`.
 
 ### Suporte experimental para vitest
 
