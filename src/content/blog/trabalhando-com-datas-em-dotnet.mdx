@@ -12,10 +12,10 @@ authorId: 'moises-bueno'
 
 import Ads from '@ads'
 
-Quem nunca teve um problema com data que atire a primeira pedra, sempre aquela consulta falta um registro.
-Cliente fez a alteração em tal dia, mas o registro apareceu só apareceu no outro dia.
+Quem nunca teve um problema com data que atire a primeira pedra. Sempre falta algum registro naquela consulta.
+Cliente fez a alteração em tal dia, mas o registro só apareceu no outro dia.
 
-## Entendendo o struct DateTime !
+## Entendendo o struct DateTime!
 
 DateTime é uma implementação de alto nível com abstrações pra facilitar nosso dia a dia.
 
@@ -26,14 +26,14 @@ DateTime é uma implementação de alto nível com abstrações pra facilitar no
    DateTime.Now;
 ```
 
-<Ads />
+## DateTime.UtcNow x DateTime.Now, qual usar?
 
-## Data UTC x Data agora ?
+A linha demonstrada por `DateTime.Now` traz a hora local do sistema operacional,
+já a linha que possui o `DateTime.UtcNow` vai trazer o horário em UTC.
 
-A linha demonstrada por DateTime.Now traz a hora local do sistema operacional,
-já a linha que possui o UTC vai trazer o horário em UTC, o ideal é sempre utilizar a Data em UTC
-hoje o sistema pode ser pequeno, mas já pensou que mesmo no Brasil temos horários diferentes,
-como -3 e -4 .
+O ideal é sempre utilizar a Data em UTC, pois mesmo em sistemas pequenos é necessário trabalhar com fusos horários diferentes.
+
+Por exemplo, no Brasil temos fusos horários diferentes para algumas regiões do país (algumas partes do país usam -3 e outras usam -4).
 
 ## DateOnly e TimeOnly
 
@@ -50,11 +50,12 @@ A partir de um DateTime podemos extrair somente a sua data ou as horas.
 
 ```
 
+<Ads />
+
 ## Conclusão
 
-Data não é uma dor de cabeça quando se trabalha com dotnet, o struct DateTime nos oferece
-muitas opções pra nos adaptar aos requisitos do negócio.
+Com o struct DateTime, o dotnet nos fornece uma ferramenta rica e flexível para trabalhar com datas e horas, tornando mais fácil lidar com essas informações em nossos projetos.
 
 ## Referências
 
-https://learn.microsoft.com/en-us/dotnet/api/system.datetime?view=net-9.0
+- https://learn.microsoft.com/en-us/dotnet/api/system.datetime?view=net-9.0
