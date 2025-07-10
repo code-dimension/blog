@@ -12,6 +12,9 @@
 		"pre-commit": "lint-staged",
 		"prepare": "husky install"
 	},
+	"engines": {
+		"node": "20.19"
+	},
 	"dependencies": {
 		"@astrojs/rss": "^4.0.12",
 		"@tinacms/cli": "^1.5.30",
