@@ -1,0 +1,61 @@
+---
+title: 'Trabalhando com datas em dotnet'
+description: Como utilizar datas, entendendo DateTime, DateOnly, TimeOnly.
+pubDate: '2025-06-09'
+heroImage: '/images/posts/date-dotnet.png'
+category: 'dotnet'
+tags:
+  - dotnet
+draft: false
+authorId: 'moises-bueno'
+---
+
+import Ads from '@ads'
+
+Quem nunca teve um problema com data que atire a primeira pedra. Sempre falta algum registro naquela consulta.
+Cliente fez a alteração em tal dia, mas o registro só apareceu no outro dia.
+
+## Entendendo o struct DateTime!
+
+DateTime é uma implementação de alto nível com abstrações pra facilitar nosso dia a dia.
+
+## Como utilizar o DateTime em dotnet?
+
+```cs
+   DateTime.UtcNow;
+   DateTime.Now;
+```
+
+## DateTime.UtcNow x DateTime.Now, qual usar?
+
+A linha demonstrada por `DateTime.Now` traz a hora local do sistema operacional,
+já a linha que possui o `DateTime.UtcNow` vai trazer o horário em UTC.
+
+O ideal é sempre utilizar a Data em UTC, pois mesmo em sistemas pequenos é necessário trabalhar com fusos horários diferentes.
+
+Por exemplo, no Brasil temos fusos horários diferentes para algumas regiões do país (algumas partes do país usam -3 e outras usam -4).
+
+## DateOnly e TimeOnly
+
+A partir de um DateTime podemos extrair somente a sua data ou as horas.
+
+```cs
+   var now = DateTime.UtcNow;
+
+   var onlyDate = DateOnly.FromDateTime(now);
+   var onlyTime = TimeOnly.FromDateTime(now);
+
+   Console.WriteLine(onlyDate);
+   Console.WriteLine(onlyTime);
+
+```
+
+<Ads />
+
+## Conclusão
+
+Com o struct DateTime, o dotnet nos fornece uma ferramenta rica e flexível para trabalhar com datas e horas, tornando mais fácil lidar com essas informações em nossos projetos.
+
+## Referências
+
+- https://learn.microsoft.com/en-us/dotnet/api/system.datetime?view=net-9.0
