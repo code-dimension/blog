@@ -18,7 +18,7 @@ export const authors = [
 		name: 'Henrique Custódia',
 		description:
 			'Arquiteto Frontend, entusiasta Angular, cat lover, criador de conteúdo e fundador da Code Dimension!',
-		image: '/images/authors/me.jpg',
+		image: '/images/authors/henrique-custodia.jpg',
 		gender: AuthorGender.Male
 	},
 	{
