@@ -1,0 +1,162 @@
+---
+heroImage: /images/posts/linked-signal-cover.webp
+category: Angular
+description: 'A linkedSignal chegou no Angular para revolucionar a forma como lidamos com estados dependentes em suas aplicações, trazendo uma flexibilidade muito necessária.'
+pubDate: '2025-07-10'
+draft: false
+tags:
+  - angular
+title: 'linkedSignal: reatividade inteligente'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+## linkedSignal: reatividade inteligente
+
+O `linkedSignal` chegou para revolucionar a forma como lidamos com estados dependentes em suas aplicações Angular, trazendo uma flexibilidade muito necessária.
+
+Se você já se viu em situações onde precisava que um dado fosse **reativo a outros dados**, mas também **pudesse ser diretamente alterado**, este é o recurso que você esperava.
+
+<EmbedYtVideo src='https://www.youtube.com/embed/AhrPSKglwgU?si=mewYELjWwVX1V4Dm' />
+
+## O que é **_linkedSignal()_**?
+
+Em poucas palavras, o **`linkedSignal`** pode ser descrito como um **`computed` modificável**. Para entender isso, vamos relembrar rapidamente os conceitos básicos dos **signals** no Angular:
+
+- **`signal()`**: Cria um **signal** básico, que é tanto lido quanto escrito. Pense nele como uma variável reativa.
+- **`computed()`**: Cria um **signal** cujo valor é derivado de um ou mais outros **signals**. Ele é **somente leitura**; você não pode alterar seu valor diretamente, pois ele sempre reflete o resultado da sua função de recomputação.
+- **`effect()`**: Permite executar efeitos colaterais (como chamadas de API ou logs) em resposta a mudanças em um ou mais **signals**. No entanto, **não é recomendado** usar `effect()` para modificar outros **signals**, pois isso pode levar a complexidades e _bugs_.
+
+O **`linkedSignal`** combina o melhor dos mundos: ele se comporta como um `computed` (seu valor é derivado de outras fontes de **signal**), mas também é **modificável**, como um `signal()` comum. Isso significa que você pode defini-lo diretamente, e essa alteração persistirá até que suas fontes de **signal** mudem e causem uma recomputação.
+
+## Para que serve o **_linkedSignal()_**?
+
+O `linkedSignal` é a ferramenta ideal para resolver cenários onde a reatividade e a mutabilidade se encontram. Ele é particularmente útil para:
+
+1.  **Formulários com Valores Iniciais Derivados e Editáveis:** Imagine um formulário onde alguns campos são preenchidos com dados padrão ou dados carregados de uma API. Com `linkedSignal`, você pode inicializar esses campos com os valores derivados, mas permitir que o usuário os edite livremente. Se os dados de origem mudarem, o campo é redefinido para o novo valor derivado, garantindo consistência.
+
+2.  **Inputs de Componentes que Precisam Ser Modificáveis Internamente:** Se um componente recebe um **signal input** (que é somente leitura por natureza) mas precisa permitir que o usuário interaja e mude esse estado internamente, o `linkedSignal` é a solução perfeita. Você pode criar um `linkedSignal` derivado do **signal input** e, então, manipular esse `linkedSignal` dentro do componente.
+
+3.  **Lógica de Estado que Depende do Valor Anterior:** Em alguns casos, ao recomputar um valor, você precisa saber qual era o valor anterior do **signal** (ou de suas fontes) para tomar uma decisão. O `linkedSignal` oferece uma sobrecarga que permite acessar esses valores anteriores em sua função de recomputação, possibilitando lógicas de estado mais sofisticadas (como "preservar a seleção se ainda for válida").
+
+4.  **Redução do Uso de `effect()` para Sincronização de Estado:** O `linkedSignal` oferece uma alternativa mais limpa e idiomática para muitos casos onde se poderia, erroneamente, tentar usar `effect()` para sincronizar e modificar o estado de outros **signals**.
+
+## Como usar o **_linkedSignal()_**?
+
+O `linkedSignal` possui duas formas principais de uso, dependendo da complexidade do seu caso:
+
+### 1. Sintaxe Simples (Como um **_computed()_** modificável)
+
+A forma mais direta é passar uma função de recomputação, assim como você faria com um `computed`.
+
+O valor do `linkedSignal` será inicialmente o resultado dessa função e será recomputado sempre que qualquer **signal** dentro da função mudar.
+
+No entanto, você pode sobrescrever esse valor a qualquer momento.
+
+```typescript
+import { signal, linkedSignal, input } from '@angular/core'
+
+@Component({
+	/* ... */
+})
+export class ProductComponent {
+	// Um signal input que pode mudar (por exemplo, ao mudar o produto selecionado)
+	productId = input.required<number>()
+
+	// Um signal que representa o nome do produto carregado
+	productName = signal('Produto Inicial')
+
+	// selectedProductName é derivado de productName, mas pode ser editado pelo usuário
+	selectedProductName = linkedSignal(() => this.productName())
+
+	constructor() {
+		// Simula uma mudança no nome do produto vindo de uma API
+		// Quando productName mudar, selectedProductName será atualizado
+		setTimeout(() => {
+			this.productName.set('Novo Produto Carregado')
+		}, 2000)
+	}
+
+	// O usuário pode editar o nome do produto diretamente
+	editProductName(newName: string) {
+		this.selectedProductName.set(newName)
+	}
+}
+```
+
+Neste exemplo, `selectedProductName` inicialmente pega o valor de `productName`.
+
+Se `productName` mudar, `selectedProductName` se atualizará. Mas, crucialmente, o usuário também pode chamar `editProductName` para definir um novo valor diretamente.
+
+Esse valor definido pelo usuário permanecerá até que `productName` mude novamente.
+
+<Ads />
+
+### 2. Sintaxe com Objeto (Para controle avançado e acesso ao estado anterior)
+
+Para cenários mais complexos, onde você precisa de mais controle sobre como o valor é derivado ou precisa acessar o estado anterior do **signal**, você pode passar um objeto com as propriedades `source` e `computation`.
+
+- **`source`**: É uma função que retorna o(s) **signal**(s) dos quais o `linkedSignal` dependerá. Pode ser um único **signal** ou um objeto com múltiplos **signals**.
+- **`computation`**: É uma função que recomputa o novo valor. Ela recebe dois argumentos:
+  - `currentSource`: O novo valor da(s) fonte(s) definida(s) em `source`.
+  - `previous`: Um objeto que contém `previous.value` (o valor anterior do próprio `linkedSignal`) e `previous.source` (o valor anterior da(s) fonte(s)).
+
+```typescript
+import { signal, linkedSignal } from '@angular/core'
+
+interface ProductOption {
+	id: number
+	name: string
+}
+
+@Component({
+	/* ... */
+})
+export class OptionsPicker {
+	availableOptions = signal<ProductOption[]>([
+		{ id: 1, name: 'Opção A' },
+		{ id: 2, name: 'Opção B' },
+		{ id: 3, name: 'Opção C' }
+	])
+
+	// selectedOption manterá a seleção do usuário se a opção ainda for válida
+	selectedOption = linkedSignal<ProductOption[], ProductOption>({
+		source: this.availableOptions, // A lista de opções disponíveis
+		computation: (newOptions, previous) => {
+			// Tenta encontrar a opção previamente selecionada na nova lista
+			const previousSelectionId = previous?.value?.id
+			const found = newOptions.find((opt) => opt.id === previousSelectionId)
+
+			// Se a opção anterior ainda existe, mantém ela. Caso contrário, seleciona a primeira.
+			return found ?? newOptions[0]
+		}
+	})
+
+	// O usuário pode selecionar uma nova opção
+	selectOption(option: ProductOption) {
+		this.selectedOption.set(option)
+	}
+
+	// Simula uma mudança nas opções disponíveis (e.g., após um filtro)
+	updateAvailableOptions() {
+		this.availableOptions.set([
+			{ id: 1, name: 'Opção A - Revisada' },
+			{ id: 4, name: 'Opção D' } // Nova opção
+		])
+	}
+}
+```
+
+Neste exemplo, se `availableOptions` mudar, a função `computation` será executada.
+
+Ela tenta preservar a `selectedOption` do usuário se seu `id` ainda estiver na nova lista de opções (`newOptions`).
+
+Se a opção anterior não estiver mais disponível, ela seleciona a primeira opção da nova lista de opções.
+
+## Conclusão
+
+O `linkedSignal` é uma adição poderosa que simplifica o gerenciamento de estados complexos e dependentes, oferecendo flexibilidade e controle que antes eram difíceis de alcançar com as ferramentas existentes.
+
+Ao entender o que é, para que serve e como usá-lo, você estará pronto para criar aplicações Angular ainda mais reativas e robustas.
