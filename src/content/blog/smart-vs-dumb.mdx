@@ -1,0 +1,166 @@
+---
+heroImage: /images/posts/smart-e-Dumb-Components-no-Angular.jpg
+category: Angular
+description: 'Nesse artigo você entenderá o que é Smart e Dumb Components no Angular e como eles ajudam a manter o código organizado e escalável.'
+pubDate: '2025-08-03'
+draft: false
+tags:
+  - angular
+title: 'Smart e Dumb Components no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+## Smart e Dumb Components no Angular: Organização Reativa com Signals
+
+No desenvolvimento de aplicações Angular modernas, manter o código **organizado, testável e escalável** é crucial. Uma das melhores práticas para atingir esses objetivos é a **separação de responsabilidades**, e a distinção entre **Smart Components** (ou Container Components) e **Dumb Components** (ou Presentational Components) é um conceito fundamental nesse paradigma.
+
+---
+
+### O que são Smart e Dumb Components?
+
+**Smart Components (Componentes Inteligentes ou de Container)**
+
+São os "cérebros" da sua aplicação. Eles se preocupam com **como as coisas funcionam**. Suas responsabilidades incluem:
+
+- **Lógica de Negócios:** Contêm a inteligência da aplicação, como a interação com serviços para buscar, adicionar ou manipular dados.
+- **Gerenciamento de Estado:** Interagem diretamente com os **Signals** de um serviço (ou outros mecanismos de estado) para obter e modificar o estado da aplicação.
+- **Orquestração:** Atuam como um "invólucro", orquestrando os dados e o comportamento que serão repassados para os componentes filhos (Dumb Components).
+- **Comunicação:** Injetam serviços e coordenam as operações entre eles e a interface.
+
+**Dumb Components (Componentes Burros ou de Apresentação)**
+
+São os "músculos" da sua aplicação, focados em **como as coisas se parecem**. Sua responsabilidade primária é a **renderização da interface do usuário (UI)**. Eles são "burros" no sentido de que não sabem de onde vêm os dados ou o que fazer com eles, apenas como exibi-los. Suas características são:
+
+- **Entradas (`input()`):** Recebem dados exclusivamente via propriedades de entrada (agora usando a função `input()`).
+- **Saídas (`output()`):** Emitem eventos (usando a função `output()`) para notificar o componente pai sobre interações do usuário, sem saber o que o pai fará com essa informação.
+- **Pura Apresentação:** Não possuem dependências de serviços ou lógica de negócios interna. Seu template foca apenas na exibição.
+- **Reutilizáveis:** São altamente reutilizáveis, pois são desacoplados de qualquer lógica específica da aplicação.
+- **Fáceis de Testar:** Por serem puramente funcionais (dada uma entrada, produzem uma saída), são simples de testar isoladamente.
+
+---
+
+### Para que servem?
+
+A combinação de Smart e Dumb Components, aprimorada com **Signals** e as novas sintaxes do Angular, oferece inúmeros benefícios:
+
+1.  **Reatividade Simplificada:** **Signals** fornecem um mecanismo reativo direto e fácil de entender para o gerenciamento de estado, eliminando a complexidade de Observables em muitos casos, tornando o fluxo de dados mais intuitivo.
+2.  **Separação Clara de Responsabilidades:** Cada componente tem uma **única e clara responsabilidade**, facilitando a manutenção, a depuração e a compreensão do código, mesmo para equipes grandes.
+3.  **Reutilização Aprimorada:** Os Dumb Components, por serem puramente apresentacionais e genéricos, podem ser **reutilizados** em diversas partes da aplicação ou até em outros projetos, economizando tempo e esforço de desenvolvimento.
+4.  **Testabilidade Facilitada:** Testar Dumb Components é mais direto, pois eles são "puros". Testar Smart Components foca na lógica de negócios e na integração de dados.
+
+<Ads />
+
+---
+
+### Exemplo de Código Usando Angular Moderno
+
+Vamos ilustrar esses conceitos com uma aplicação Angular simplificada que permite apenas adicionar tarefas.
+
+#### Serviço: `task.service.ts`
+
+```typescript
+import { Injectable, signal } from '@angular/core'
+
+export interface Task {
+	id: number
+	description: string
+}
+
+@Injectable({
+	providedIn: 'root'
+})
+export class TaskService {
+	private taskSignal = signal<Task[]>([])
+	private nextId = 1
+
+	tasks = this.taskSignal.asReadonly()
+
+	addTask(description: string): void {
+		const newTask: Task = { id: this.nextId++, description }
+		this.taskSignal.update((currentTasks) => [...currentTasks, newTask])
+	}
+}
+```
+
+#### Dumb Component: `task-item.component.ts`
+
+```typescript
+import { Component, input } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { Task } from '../task.service'
+
+@Component({
+	selector: 'app-task-item',
+	standalone: true,
+	imports: [CommonModule],
+	template: `
+		<div>
+			<span>{{ task().description }}</span>
+		</div>
+	`,
+	styles: []
+})
+export class TaskItemComponent {
+	task = input.required<Task>()
+}
+```
+
+#### Smart Component: `task-list.component.ts`
+
+```typescript
+import { Component } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { FormsModule } from '@angular/forms'
+import { TaskItemComponent } from './task-item.component'
+import { TaskService } from '../task.service'
+
+@Component({
+	selector: 'app-task-list',
+	standalone: true,
+	imports: [CommonModule, FormsModule, TaskItemComponent],
+	template: `
+		<div>
+			<h2>Minhas Tarefas (Apenas Adicionar, Sem Estilo)</h2>
+			<div>
+				<input
+					[(ngModel)]="newTaskDescription"
+					placeholder="Adicionar nova tarefa..."
+					(keyup.enter)="addTask()"
+				/>
+				<button (click)="addTask()">Adicionar</button>
+			</div>
+			<div>
+				@if (taskService.tasks().length > 0) {
+					@for (task of taskService.tasks(); track task.id) {
+						<app-task-item [task]="task"></app-task-item>
+					}
+				} @else {
+					<p>Nenhuma tarefa adicionada ainda!</p>
+				}
+			</div>
+		</div>
+	`,
+	styles: []
+})
+export class TaskListComponent {
+	newTaskDescription = signal('')
+
+	taskService = inject(TaskService)
+
+	addTask(): void {
+		if (this.newTaskDescription.trim()) {
+			this.taskService.addTask(this.newTaskDescription().trim())
+			this.newTaskDescription.set('')
+		}
+	}
+}
+```
+
+---
+
+### Conclusão
+
+A arquitetura de **Smart e Dumb Components** continua sendo uma estratégia fundamental para construir aplicações Angular eficientes e fáceis de manter. Ao separar as preocupações entre a lógica de negócios (Smart Components) e a apresentação da UI (Dumb Components), ganhamos em **clareza, reutilização e testabilidade**. Adotar essa distinção em seus projetos é um passo importante para um código Angular de alta qualidade.
