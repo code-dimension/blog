@@ -1,0 +1,244 @@
+---
+heroImage: /images/posts/Inject-Function-e-Injection-Context.jpg
+category: Angular
+description: 'Aprenda a usar a função inject (inject function) do Angular e descubra o que é o Contexto de Injeção (injection context) e como injetar dependências de forma segura e moderna.'
+pubDate: '2025-08-13'
+draft: false
+tags:
+  - angular
+title: 'Inject Function e Injection Context no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Neste artigo, vamos mergulhar em um dos conceitos mais fundamentais e poderosos do Angular: a Injeção de Dependência (DI). Entender como a DI funciona é essencial para construir aplicações escaláveis e de fácil manutenção.
+
+Abordaremos os seguintes tópicos:
+
+- O que é Injeção de Dependência e por que o Angular a utiliza.
+- A moderna função `inject` para consumir dependências.
+- Uma comparação entre a forma tradicional (via construtor) e a nova abordagem com `inject`.
+- O que é o "Injection Context" (Contexto de Injeção) e sua importância.
+- Problemas ao não respeitar o contexto de injeção.
+- Como criar um contexto de injeção usando a função `runInInjectionContext`.
+
+### O que é Injeção de Dependência (DI)?
+
+A Injeção de Dependência é um padrão de projeto no qual uma classe solicita suas dependências de uma fonte externa em vez de criá-las por conta própria.
+
+No ecossistema Angular, esse é um conceito fundamental. Imagine uma classe de componente que precisa de um serviço para buscar dados de um servidor.
+
+Em vez de o componente criar uma nova instância desse serviço, ele simplesmente declara que precisa dele, e o framework Angular se encarrega de "injetar" (fornecer) uma instância desse serviço.
+
+O sistema de DI do Angular é composto por três atores principais:
+
+- **Consumidor de Dependência (Dependency Consumer):** Uma classe (como um Componente, Diretiva ou outro Serviço) que precisa de uma dependência.
+- **Provedor de Dependência (Dependency Provider):** Algo que sabe como criar e fornecer a dependência.
+- **Injetor (Injector):** O mecanismo central do Angular que conecta consumidores e provedores. O injetor mantém um registro de provedores e, quando uma dependência é solicitada, ele a cria (se ainda não existir) e a entrega ao consumidor.
+
+Angular utiliza a DI para desacoplar as classes, tornando o código mais modular, reutilizável e, principalmente, mais fácil de testar.
+
+Ao separar um componente de suas dependências, podemos facilmente substituir um serviço real por uma versão "mock" (simulada) durante os testes.
+
+### A Função `inject`
+
+A maneira moderna e recomendada de consumir dependências no Angular é através da função `inject`.
+
+Esta função permite que você solicite uma dependência de forma declarativa e flexível.
+
+```typescript
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { LoggerService } from './logger.service'
+
+@Component({
+	selector: 'app-user-profile',
+	template: `
+		<h2>User Profile</h2>
+		<p>Status: {{ status() }}</p>
+	`,
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	imports: [CommonModule],
+	standalone: true
+})
+export class UserProfileComponent {
+	// A função inject é usada para obter uma instância do LoggerService.
+	private logger = inject(LoggerService)
+
+	status = signal('Offline')
+
+	constructor() {
+		this.logger.log('UserProfileComponent initialized.')
+		this.status.set('Online')
+	}
+}
+```
+
+A função `inject` é preferível à injeção via construtor por várias razões:
+
+- **Legibilidade:** É mais clara, especialmente quando uma classe possui muitas dependências.
+- **Flexibilidade:** Pode ser usada em funções fora de classes, como em Route Guards.
+- **Melhor inferência de tipos:** Oferece uma melhor inferência de tipos pelo TypeScript.
+
+### Injeção via Construtor vs. a Função `inject`
+
+Antes da introdução da função `inject`, a única maneira de receber dependências era através do construtor da classe.
+
+Embora essa abordagem ainda seja totalmente suportada, a função `inject` é agora o padrão recomendado.
+
+Veja uma comparação direta:
+
+**Forma Antiga (Injeção via Construtor)**
+
+```typescript
+import { Component } from '@angular/core'
+import { GreeterService } from './greeter.service'
+
+@Component({
+	/* ... */
+})
+export class GreeterComponent {
+	// O serviço é injetado como um parâmetro no construtor.
+	constructor(private greeter: GreeterService) {}
+}
+```
+
+**Nova Forma (Função `inject`)**
+
+```typescript
+import { Component, inject } from '@angular/core'
+import { GreeterService } from './greeter.service'
+
+@Component({
+	/* ... */
+})
+export class GreeterComponent {
+	// O serviço é injetado diretamente em uma propriedade da classe.
+	private greeter = inject(GreeterService)
+}
+```
+
+A nova abordagem é mais limpa e separa a lógica de injeção da lógica de construção da classe, tornando o código mais organizado.
+
+### O Que é o Injection Context?
+
+Um dos conceitos mais importantes ao usar a função `inject` é o **Contexto de Injeção (Injection Context)**.
+
+O sistema de DI do Angular não funciona a qualquer momento; ele depende de um contexto de execução específico onde o injetor atual está disponível.
+
+A função `inject` só pode ser chamada com sucesso quando está dentro desse contexto.
+
+O contexto de injeção está disponível **exclusivamente durante a fase de construção de uma classe** que o Angular está instanciando.
+
+Isso inclui:
+
+- Nos inicializadores de propriedades (fields) da classe.
+- Dentro do corpo do `constructor`.
+
+```typescript
+import { inject, Component } from '@angular/core'
+import { Service1, Service2 } from './services'
+
+class MyComponent {
+	// CORRETO: Chamado no inicializador de propriedade (dentro do contexto).
+	private service2: Service2 = inject(Service2)
+	private service1: Service1
+
+	constructor() {
+		// CORRETO: Chamado dentro do construtor (dentro do contexto).
+		this.service1 = inject(Service1)
+	}
+}
+```
+
+Qualquer tentativa de chamar `inject` fora desses locais resultará em um erro, pois o contexto não estará mais ativo.
+
+<Ads />
+
+### O Problema: `inject` Fora do Contexto
+
+O erro mais comum ao usar a função `inject` é chamá-la fora do contexto de injeção. O Angular lançará um erro `NG0203` se isso acontecer.
+
+Isso acontece porque métodos de ciclo de vida (como `ngOnInit`), manipuladores de eventos (como um `(click)`) e callbacks assíncronos (como `setTimeout`) são executados _após_ a construção da classe, quando o contexto de injeção já não está mais disponível.
+
+```typescript
+import { inject, Component, OnInit } from '@angular/core'
+import { LoggerService } from './logger.service'
+
+@Component({
+	/* ... */
+})
+export class MyComponent implements OnInit {
+	ngOnInit(): void {
+		// INCORRETO: ngOnInit executa após a construção.
+		const logger = inject(LoggerService) // <-- ISTO CAUSARÁ UM ERRO!
+		logger.log('Component has initialized.')
+	}
+
+	handleClick(): void {
+		// INCORRETO: O manipulador de evento executa muito depois da construção.
+		const logger = inject(LoggerService) // <-- ISTO CAUSARÁ UM ERRO!
+		logger.log('Button was clicked.')
+	}
+}
+```
+
+### Criando um Contexto com `runInInjectionContext`
+
+Para resolver o problema de precisar de uma dependência fora da fase de construção, o Angular oferece a função `runInInjectionContext`.
+
+Esta função permite que você execute um bloco de código dentro de um contexto de injeção que você fornece manualmente.
+
+A estratégia correta é capturar uma referência ao injetor durante a construção (quando o contexto está ativo) e usá-la posteriormente com `runInInjectionContext`.
+
+```typescript
+import {
+	Component,
+	ChangeDetectionStrategy,
+	inject,
+	EnvironmentInjector,
+	runInInjectionContext
+} from '@angular/core'
+import { LoggerService } from './logger.service'
+
+@Component({
+	selector: 'app-timer-button',
+	template: `<button (click)="scheduleLog()">Schedule Log</button>`,
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: true
+})
+export class TimerButtonComponent {
+	// 1. Injetamos o EnvironmentInjector durante a construção,
+	//    quando o contexto de injeção está disponível.
+	private injector = inject(EnvironmentInjector)
+
+	scheduleLog(): void {
+		setTimeout(() => {
+			// 2. Usamos o injetor capturado para criar um novo contexto de injeção
+			//    e executar nosso código dentro dele.
+			runInInjectionContext(this.injector, () => {
+				const logger = inject(LoggerService) // <-- AGORA ISTO FUNCIONA!
+				logger.log('This log was scheduled but executed in the correct context.')
+			})
+		}, 1000)
+	}
+}
+```
+
+Ao capturar o injetor durante a inicialização do componente, podemos usá-lo posteriormente com `runInInjectionContext` para criar um "portal" de volta ao sistema de DI do Angular, permitindo que a função `inject` funcione conforme o esperado, mesmo em callbacks assíncronos ou em qualquer outro ponto fora da fase de construção.
+
+### Conclusão
+
+A Injeção de Dependência é um pilar no Angular, essencial para construir aplicações modulares e fáceis de testar.
+
+A evolução do framework trouxe a função `inject` como a abordagem moderna e preferida para consumir dependências, oferecendo uma sintaxe mais limpa e declarativa em comparação com a injeção tradicional via construtor.
+
+O uso da função `inject` está estritamente ligado ao **Contexto de Injeção**, que existe apenas durante a fase de construção de uma classe (em inicializadores de propriedades e no `constructor`).
+
+Tentar usá-la fora desse contexto, como em `ngOnInit` ou callbacks assíncronos, resultará em um erro em tempo de execução.
+
+Para esses cenários, a solução correta é capturar o `Injector` e utilizar a função `runInInjectionContext` para executar o código de forma segura.
+
+Compreender e aplicar corretamente esse padrão é fundamental para desenvolver aplicações Angular robustas e alinhadas com as melhores práticas atuais.
