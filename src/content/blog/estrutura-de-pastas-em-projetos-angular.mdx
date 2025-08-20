@@ -1,0 +1,192 @@
+---
+heroImage: /images/posts/Arquitetura-de-pastas-em-Angular.jpg
+category: Angular
+description: 'Aprenda a criar uma arquitetura de pastas em Angular escalável e organizada. Use a abordagem de pastas com `core`, `features` e `shared` para otimizar seus projetos.'
+pubDate: '2025-08-20'
+draft: false
+tags:
+  - angular
+title: 'Arquitetura de pastas em Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+A forma como estruturamos as pastas e arquivos em um projeto Angular é um dos pilares para garantir sua longevidade, manutenibilidade e escalabilidade.
+
+Uma dúvida comum, especialmente para quem está começando, é como ir além da estrutura padrão gerada pelo Angular CLI.
+
+Embora não exista uma única "bala de prata", a comunidade e a experiência em projetos de larga escala consolidaram uma abordagem robusta e intuitiva que facilita o trabalho, principalmente quando o projeto cresce e novas pessoas entram no time.
+
+Mais do que apenas organizar arquivos, uma boa arquitetura de pastas define limites claros.
+
+Ela estabelece onde uma responsabilidade começa e termina, como as diferentes partes da aplicação podem interagir e, crucialmente, o que elas _não podem_ fazer.
+
+Adotar uma estrutura bem pensada desde o início é um investimento que previne o débito técnico, reduz a complexidade e acelera o desenvolvimento a longo prazo, permitindo que a aplicação cresça de forma saudável e organizada.
+
+> <EmbedYtVideo src='https://www.youtube.com/embed/bm5i7dZPPxg?si=Gnw2jy2i0cZia3Od' />
+
+### Os Três Pilares da Estrutura: `core`, `features` e `shared`
+
+A base da nossa estrutura recomendada se apoia em três diretórios principais dentro de `src/app`: `core`, `features` e `shared`.
+
+Cada um possui uma responsabilidade clara e distinta, ajudando a classificar cada novo arquivo ou funcionalidade no lugar certo.
+
+- **`core`**: O núcleo da aplicação, contendo tudo que é essencial e carregado uma única vez.
+- **`features`**: As diferentes funcionalidades ou domínios de negócio da sua aplicação.
+- **`shared`**: Recursos reutilizáveis que podem ser consumidos por diferentes funcionalidades.
+
+### A Pasta `core`: O Núcleo da Aplicação
+
+A principal regra da pasta `core` é simples: **coloque aqui tudo aquilo que é fundamental para a aplicação e, conceitualmente, instanciado apenas uma vez no nível da raiz**.
+
+É o lugar ideal para serviços singleton, interceptors, guards e outras lógicas de inicialização que são, por natureza, globais.
+
+**O que colocar aqui?**
+
+- **Componentes de Layout:** Componentes estruturais como `LayoutComponent`, `HeaderComponent`, `FooterComponent`, que definem a "casca" da aplicação.
+- **Serviços Essenciais, Guards e Interceptors:** Lógicas de proteção de rota (`AuthGuard`) e interceptadores de requisições HTTP (`AuthInterceptor`) que atuam globalmente.
+- **Initializers (`APP_INITIALIZER`):** Funções que precisam rodar durante a inicialização do Angular para configurar ou carregar dados essenciais.
+
+**Boa Prática:** Para manter o arquivo `app.config.ts` limpo e legível, é uma ótima prática criar funções de provider dentro do `core`.
+
+Por exemplo, uma função `provideCore()` pode encapsular todos os providers relacionados ao `core`, simplificando o registro na aplicação.
+
+```typescript
+// src/app/core/core.providers.ts
+import { provideHttpClient, withInterceptors } from '@angular/common/http'
+import { authInterceptor } from './interceptors/auth.interceptor'
+import { EnvironmentProviders, Provider } from '@angular/core'
+
+export function provideCore(): (Provider | EnvironmentProviders)[] {
+	return [
+		provideHttpClient(withInterceptors([authInterceptor]))
+		// Outros providers do core...
+	]
+}
+
+// src/app/app.config.ts
+import { ApplicationConfig } from '@angular/core'
+import { provideRouter } from '@angular/router'
+import { routes } from './app.routes'
+import { provideCore } from './core/core.providers'
+
+export const appConfig: ApplicationConfig = {
+	providers: [
+		provideRouter(routes),
+		provideCore() // Mantém o app.config limpo e declarativo
+	]
+}
+```
+
+### A Pasta `features`: Módulos de Funcionalidade com Lazy Loading
+
+Esta é a pasta onde a maior parte da sua aplicação viverá.
+
+Cada subpasta dentro de `features` representa uma funcionalidade de negócio autocontida, como `products`, `checkout`, ou `profile`.
+
+A ideia é que cada feature seja o mais independente possível.
+
+**Roteamento Inteligente:**
+Uma prática poderosa é fazer com que o roteador principal (`app.routes.ts`) carregue um arquivo de rotas específico de cada feature (`feature.routes.ts`) em vez de um único componente.
+
+Isso, combinado com lazy loading, delega a responsabilidade do roteamento interno para a própria feature, mantendo o roteador principal enxuto e focado em orquestrar as áreas da aplicação.
+
+```typescript
+// src/app/app.routes.ts
+import { Routes } from '@angular/router'
+
+export const routes: Routes = [
+	{
+		path: 'products',
+		// Carrega o arquivo de rotas da feature de produtos
+		loadChildren: () => import('./features/products/products.routes').then((m) => m.PRODUCT_ROUTES)
+	}
+	// ... outras rotas de features
+]
+
+// src/app/features/products/products.routes.ts
+import { Routes } from '@angular/router'
+import { ProductListComponent } from './pages/product-list/product-list.component'
+import { ProductDetailComponent } from './pages/product-detail/product-detail.component'
+
+// A feature gerencia suas próprias rotas
+export const PRODUCT_ROUTES: Routes = [
+	{
+		path: '',
+		component: ProductListComponent
+	},
+	{
+		path: ':id',
+		component: ProductDetailComponent
+	}
+]
+```
+
+### A Pasta `shared`: Recursos Genuinamente Reutilizáveis
+
+A pasta `shared` é destinada para componentes, diretivas, pipes e modelos que são **reutilizados em múltiplas features**.
+
+Se um componente de `card` é usado tanto na listagem de produtos quanto no carrinho de compras, ele pertence a `shared`.
+
+`Shared` não deve conter serviços que são fundamentais para a estrutura da aplicação; esses pertencem ao `core`.
+
+<Ads />
+
+### Como Decidir Onde Colocar um Recurso (`core` vs. `shared`)
+
+A dúvida sobre alocar um recurso na pasta `core` ou `shared` é muito comum.
+
+A regra de decisão é a mesma para qualquer tipo de recurso – sejam **serviços, componentes, diretivas ou pipes** – e se baseia em quem o consome.
+
+- **Coloque o recurso em `core` se:**
+  Ele for consumido **exclusivamente** por outro recurso que já pertence ao `core`. Por exemplo, se um `AuthInterceptor` (que está no `core`) precisa de um `TokenStorageService`, então o `TokenStorageService` também deve ficar no `core`. Da mesma forma, um `LogoutButtonComponent` usado apenas dentro do `HeaderComponent` (que faz parte do layout no `core`) também pertence ao `core`. Isso mantém o núcleo autocontido.
+
+- **Coloque o recurso em `shared` se:**
+  Ele foi projetado para ser reutilizável e é consumido por **múltiplas `features`**, mas não por nada no `core`. Por exemplo, um `PriceFormatPipe`, um `CardComponent` genérico ou um `TransactionsService` que é usado pelas features `home` e `reports` são candidatos perfeitos para a pasta `shared`.
+
+### Escalando o Projeto: Vantagens para Múltiplas Equipes e Longo Prazo
+
+Adotar essa estrutura desde o início traz benefícios imensos, especialmente em cenários complexos.
+
+**Autonomia e Paralelismo:**
+Com funcionalidades claramente isoladas em suas próprias pastas, diferentes equipes podem trabalhar em paralelo com um risco mínimo de conflitos.
+
+A Equipe A pode desenvolver a feature de "profile" enquanto a Equipe B trabalha no "dashboard" sem interferir uma na outra.
+
+**Redução de Débito Técnico:**
+A estrutura previne o acoplamento excessivo entre as partes do sistema.
+
+Isso evita que o projeto se torne um "emaranhado de dependências" com o tempo, tornando as manutenções futuras mais rápidas e seguras.
+
+**Consistência e Previsibilidade:**
+Um novo desenvolvedor ou alguém que muda de equipe consegue entender rapidamente onde encontrar os arquivos e como a aplicação está organizada, acelerando sua produtividade e reduzindo a curva de aprendizado.
+
+### Regras de Dependência: Definindo os Limites da Arquitetura
+
+Para que a estrutura funcione, é vital respeitar uma regra de fluxo de dependências.
+
+A arquitetura se fortalece com limites claros.
+
+- **O Fluxo Correto:**
+  - `features` podem depender de `core` e `shared`.
+  - `shared` pode depender de `core`.
+- **O Anti-Padrão a ser Evitado:**
+  - `core` **NUNCA** deve depender de `shared` ou `features`.
+
+O núcleo da aplicação deve ser agnóstico às funcionalidades e aos componentes compartilhados.
+
+Se o `core` precisar de algo de uma feature, provavelmente essa lógica deveria estar no próprio `core`.
+
+Quebrar essa regra cria dependências circulares e destrói o propósito do isolamento, tornando o projeto frágil e difícil de manter.
+
+### Conclusão: Construindo para o Futuro
+
+Estruturar um projeto Angular com as pastas `core`, `features` e `shared`, e respeitar um fluxo de dependência claro, é uma estratégia poderosa para construir aplicações robustas e escaláveis.
+
+Essa abordagem promove o baixo acoplamento e a alta coesão, princípios fundamentais da engenharia de software que facilitam a manutenção, os testes e o trabalho em equipe.
+
+Ao definir limites claros desde o início, você garante que sua aplicação possa crescer de forma sustentável, adaptando-se a novas regras de negócio e tecnologias sem a necessidade de grandes e arriscadas refatorações.
+
+A consistência e a disciplina em manter essa organização são o que garantem um projeto saudável e produtivo a longo prazo.
