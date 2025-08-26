@@ -1,0 +1,160 @@
+---
+heroImage: /images/posts/husky-lint-staged.jpg
+category: Angular
+description: 'Automatize a qualidade do seu código Angular. Use Husky e Lint-staged para rodar linters e formatadores antes de cada commit, garantindo um código limpo.'
+pubDate: '2025-08-26'
+draft: false
+tags:
+  - angular
+  - automação
+title: 'Husky e Lint-staged: Código Limpo e Consistente no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Manter a qualidade e a consistência do código em um projeto de software é um desafio constante, especialmente em equipes onde vários desenvolvedores contribuem para a mesma base de código.
+
+Inconsistências de estilo, erros de lint não detectados e formatação divergente podem facilmente se infiltrar no repositório, tornando a manutenção mais difícil e o código menos legível.
+
+Embora as revisões de código ajudem, a automação de verificações de qualidade é uma abordagem muito mais eficiente e segura para garantir que apenas código que atende aos padrões do projeto seja commitado.
+
+A combinação de ferramentas como [Husky](https://github.com/typicode/husky) e [Lint-staged](https://github.com/lint-staged/lint-staged) oferece uma solução poderosa para automatizar essas verificações.
+
+Ao integrá-las ao fluxo de trabalho do Git, podemos executar linters, formatadores e outros scripts de qualidade automaticamente antes de cada commit.
+
+Isso não apenas economiza tempo, mas também cria um ciclo de feedback imediato para o desenvolvedor, garantindo que problemas sejam corrigidos antes mesmo de saírem da máquina local, resultando em um repositório mais limpo e um processo de desenvolvimento mais fluido para toda a equipe.
+
+### O Problema: Código Divergente em Cada Commit
+
+Em um projeto sem verificações automatizadas, é comum que o código enviado em cada commit possua estilos e padrões diferentes.
+
+Um desenvolvedor pode usar aspas simples enquanto outro usa aspas duplas, ou a indentação pode variar.
+
+Essas pequenas divergências, quando somadas, criam uma base de código inconsistente e de difícil leitura.
+
+Confiar que cada desenvolvedor lembrará de rodar manualmente os comandos de lint e formatação antes de commitar é uma estratégia frágil.
+
+A automação remove o fator humano e estabelece um padrão de qualidade obrigatório para todo o código que entra no repositório.
+
+### O que é Husky?
+
+[Husky](https://github.com/typicode/husky) é uma ferramenta que permite integrar facilmente scripts aos hooks do Git.
+
+Os hooks do Git são gatilhos executados em momentos específicos do ciclo de vida do Git, como antes de um commit (`pre-commit`) ou antes de um push (`pre-push`).
+
+Com o [Husky](https://github.com/typicode/husky), você pode configurar um script para ser executado, por exemplo, toda vez que o comando `git commit` for acionado.
+
+Isso garante que certas verificações de qualidade sejam feitas antes que o commit seja finalizado, impedindo a entrada de código que não segue os padrões definidos.
+
+### O que é Lint-staged?
+
+Executar o linter ou o formatador em toda a base de código a cada commit pode ser um processo lento, especialmente em projetos grandes.
+
+Isso pode desencorajar os desenvolvedores e tornar o processo de commit demorado e frustrante.
+
+[Lint-staged](https://github.com/lint-staged/lint-staged) resolve esse problema de forma inteligente.
+
+Em vez de analisar todos os arquivos do projeto, ele executa os scripts de qualidade **apenas** nos arquivos que estão em "staging" no Git, ou seja, aqueles que foram modificados e adicionados para o próximo commit (`git add`).
+
+Isso torna o processo extremamente rápido e focado apenas no código que está sendo alterado.
+
+### Como a combinação resolve o problema?
+
+Juntos, [Husky](https://github.com/typicode/husky) e [Lint-staged](https://github.com/lint-staged/lint-staged) criam um fluxo de trabalho de automação robusto.
+
+O [Husky](https://github.com/typicode/husky) gerencia o hook `pre-commit` do Git.
+
+Quando um desenvolvedor tenta fazer um commit, o [Husky](https://github.com/typicode/husky) é acionado e executa o comando configurado, que no nosso caso será o `lint-staged`.
+
+O [Lint-staged](https://github.com/lint-staged/lint-staged), por sua vez, identifica quais arquivos estão em staging e executa as tarefas de lint e formatação configuradas apenas nesses arquivos.
+
+Se algum erro de lint for encontrado e não puder ser corrigido automaticamente, o processo de commit é interrompido, forçando o desenvolvedor a corrigir os problemas antes de prosseguir.
+
+### Como Configurar o Ambiente no seu Projeto Angular
+
+Vamos ao passo a passo para integrar essas ferramentas em um projeto Angular existente.
+
+#### Passo 1: Instalando as Dependências
+
+Primeiro, instale o [Husky](https://github.com/typicode/husky) e o [Lint-staged](https://github.com/lint-staged/lint-staged) como dependências de desenvolvimento.
+
+```shell
+npm install --save-dev husky lint-staged
+```
+
+#### Passo 2: Configurando o Husky
+
+Após a instalação, ative o [Husky](https://github.com/typicode/husky) no seu projeto.
+
+O comando a seguir inicializa o [Husky](https://github.com/typicode/husky), criando a pasta `.husky` e configurando o hook `pre-commit`.
+
+1.  **Inicialize o Husky:**
+
+    ```shell
+    npx husky init
+    ```
+
+2.  **Adicione o script `lint-staged` ao hook `pre-commit`:**
+
+    O comando a seguir cria o arquivo `.husky/pre-commit` e adiciona o comando `npx lint-staged` a ele.
+
+    ```shell
+    npx husky add .husky/pre-commit "npx lint-staged"
+    ```
+
+Agora, toda vez que você executar `git commit`, o [Husky](https://github.com/typicode/husky) irá executar o comando `npx lint-staged`.
+
+#### Passo 3: Configurando o Lint-staged
+
+A configuração do [Lint-staged](https://github.com/lint-staged/lint-staged) é feita no arquivo `package.json`.
+
+Aqui você define quais comandos devem ser executados para diferentes tipos de arquivo.
+
+Adicione a seguinte seção ao seu `package.json`:
+
+```json
+{
+  "scripts": {
+    ...
+  },
+  "dependencies": {
+    ...
+  },
+  "devDependencies": {
+    ...
+  },
+  "lint-staged": {
+    "*.{ts,html}": [
+      "eslint --fix"
+    ],
+    "*.{scss,css,json,md}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+Nesta configuração:
+
+- Para qualquer arquivo `.ts` ou `.html` que esteja em staging, ele executará o comando `eslint --fix` para lintar e corrigir automaticamente os erros.
+- Para arquivos de estilo, JSON ou Markdown, ele executará o `prettier --write` para garantir uma formatação consistente.
+
+Agora, tente modificar um arquivo `.ts`, adicioná-lo ao staging (`git add .`) e fazer um commit.
+
+Você verá o [Husky](https://github.com/typicode/husky) e o [Lint-staged](https://github.com/lint-staged/lint-staged) em ação, garantindo que seu código esteja limpo e formatado antes de ser salvo no histórico.
+
+<Ads />
+
+### Conclusão
+
+A implementação do [Husky](https://github.com/typicode/husky) com [Lint-staged](https://github.com/lint-staged/lint-staged) em um projeto Angular é um passo fundamental para elevar a maturidade do processo de desenvolvimento.
+
+Essa automação simples, mas eficaz, garante que todos os commits passem por um rigoroso controle de qualidade, prevenindo a introdução de débitos técnicos relacionados à formatação e a erros de lint.
+
+O resultado é uma base de código mais limpa, consistente e fácil de manter, independentemente do tamanho da equipe ou da complexidade do projeto.
+
+Ao remover a necessidade de verificações manuais e integrar a qualidade diretamente ao fluxo de trabalho do Git, as equipes podem focar no que realmente importa: construir funcionalidades robustas e de alto valor.
+
+Adotar essa prática não apenas melhora a colaboração, mas também estabelece uma cultura de excelência, onde a qualidade do código é uma responsabilidade compartilhada e automatizada, beneficiando o projeto a longo prazo.
