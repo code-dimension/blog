@@ -1,0 +1,205 @@
+---
+heroImage: /images/posts/Facade-Pattern-com-Angular.jpg
+category: Angular
+description: 'Aprenda a aplicar o Facade Pattern no Angular para orquestrar múltiplos serviços. Simplifique seus componentes e melhore a arquitetura da sua aplicação.'
+pubDate: '2025-09-09'
+draft: false
+tags:
+  - angular
+title: 'Facade Pattern com Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+No desenvolvimento de aplicações complexas, é comum que a lógica de negócio seja distribuída entre vários serviços, cada um com uma responsabilidade única. Embora essa abordagem seja excelente para a manutenibilidade e organização do código, ela pode criar um desafio: componentes que precisam orquestrar múltiplos serviços para realizar uma única ação, resultando em um acoplamento forte e em uma lógica de coordenação complexa dentro do próprio componente.
+
+Para resolver esse problema, podemos aplicar o Facade Pattern, um padrão de projeto estrutural que visa simplificar a interação com sistemas complexos. A ideia é criar uma "fachada", uma classe que atua como um ponto de entrada único e simplificado para um conjunto de serviços ou subsistemas. Ao fazer isso, desacoplamos os componentes da complexidade interna da lógica de negócio, tornando o código mais limpo, fácil de entender e de manter. Este artigo explora como implementar o Facade Pattern em uma aplicação Angular para otimizar a arquitetura de serviços.
+
+## O que é o Facade Pattern?
+
+O Facade Pattern é um padrão de projeto que fornece uma interface unificada e simplificada para um conjunto de interfaces em um subsistema. Em vez de um componente precisar interagir diretamente com múltiplos serviços para executar uma tarefa, ele se comunica apenas com o Facade. O Facade, por sua vez, coordena as chamadas para os serviços necessários, escondendo toda a complexidade interna.
+
+Pense no Facade como o controle remoto de uma TV. Para ligar a TV, ajustar o volume e mudar de canal, você não precisa entender os circuitos eletrônicos complexos que executam essas tarefas. O controle remoto oferece uma interface simples para interagir com o sistema complexo da TV. Em uma aplicação Angular, o Facade funciona de maneira semelhante, simplificando a orquestração de chamadas a diferentes serviços.
+
+## Problemas que o Facade Resolve
+
+O principal problema que o Facade Pattern resolve é o alto acoplamento e a complexidade que surgem quando um componente precisa interagir com múltiplos serviços para realizar uma única ação de negócio. Isso torna o componente difícil de testar e manter, pois ele passa a ter muitas responsabilidades.
+
+Vamos considerar um fluxo de login de usuário como exemplo. Uma única ação de "entrar" pode envolver vários passos:
+
+1.  **Autenticar o usuário:** Chamar um `AuthService` para validar as credenciais.
+2.  **Buscar dados do perfil:** Após a autenticação, chamar um `UserService` para obter as informações do perfil do usuário.
+3.  **Atualizar o estado da aplicação:** Informar a aplicação que o usuário está logado e quais são seus dados.
+4.  **Registrar o evento:** Chamar um `AnalyticsService` para registrar que o login foi bem-sucedido.
+
+Sem um Facade, o componente de login precisaria injetar e coordenar todos esses serviços e gerenciar o estado. A lógica do componente ficaria poluída com a orquestração dessas chamadas, tirando o foco de sua principal responsabilidade: gerenciar a interface do usuário.
+
+## Cenário Onde o Facade Pode Ser Aplicado
+
+O Facade Pattern é ideal para qualquer cenário onde uma ação do usuário ou um processo de negócio requer a coordenação de múltiplos serviços. Ele brilha em fluxos de trabalho que possuem vários passos.
+
+Alguns cenários comuns incluem:
+
+- **Processo de Checkout em E-commerce:** Um Facade pode orquestrar `CartService`, `PaymentService`, `ShippingService` e `OrderService` para finalizar uma compra.
+- **Inicialização de Dashboards:** Um Facade pode buscar dados de diferentes fontes (`SalesService`, `MetricsService`, `UserService`) para popular um painel de controle.
+- **Submissão de Formulários Complexos:** Ao enviar um formulário com várias seções, um Facade pode interagir com diferentes serviços para validar e salvar cada parte dos dados.
+
+## Como Aplicar Facade Usando Angular Services
+
+A aplicação do Facade Pattern no Angular é feita através da criação de um novo serviço (o "Facade Service") que orquestra as ações, e um serviço de "Store" que gerencia o estado. Essa separação é crucial: o Facade executa os comandos (ações) e o Store mantém e expõe o estado.
+
+Vamos implementar essa arquitetura para o nosso fluxo de login.
+
+**1. Crie os serviços de negócio:**
+
+```typescript
+// auth.service.ts
+import { Injectable } from '@angular/core'
+import { of } from 'rxjs'
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+	login(user: string, pass: string) {
+		console.log('1. Authenticating user...')
+		return of({ token: 'fake-jwt-token' })
+	}
+}
+
+// user.service.ts
+import { Injectable } from '@angular/core'
+import { of } from 'rxjs'
+
+@Injectable({ providedIn: 'root' })
+export class UserService {
+	fetchProfile(token: string) {
+		console.log('2. Fetching user profile...')
+		return of({ name: 'John Doe', email: 'john.doe@email.com' })
+	}
+}
+```
+
+**2. Crie o serviço de Store para o estado do usuário:**
+Este serviço (`CurrentUserStore`) será a fonte única da verdade para o estado do usuário logado.
+
+```typescript
+// current-user.store.ts
+import { Injectable, signal } from '@angular/core'
+
+export interface UserProfile {
+	name: string
+	email: string
+}
+
+@Injectable({ providedIn: 'root' })
+export class CurrentUserStore {
+	// Signals para gerenciar o estado
+	readonly isLoading = signal(false)
+	readonly currentUser = signal<UserProfile | null>(null)
+
+	// Métodos para alterar o estado
+	setLoading(isLoading: boolean) {
+		this.isLoading.set(isLoading)
+	}
+
+	setCurrentUser(user: UserProfile | null) {
+		this.currentUser.set(user)
+	}
+}
+```
+
+**3. Crie o `LoginFacadeService` para orquestrar as ações:**
+O Facade injeta os serviços de negócio e o Store, e expõe um único método `login`.
+
+```typescript
+// login-facade.service.ts
+import { Injectable, inject } from '@angular/core'
+import { tap, switchMap } from 'rxjs/operators'
+import { AuthService } from './auth.service'
+import { UserService } from './user.service'
+import { CurrentUserStore } from './current-user.store'
+
+@Injectable({ providedIn: 'root' })
+export class LoginFacadeService {
+	private authService = inject(AuthService)
+	private userService = inject(UserService)
+	private userStore = inject(CurrentUserStore)
+
+	login(user: string, pass: string) {
+		this.userStore.setLoading(true)
+		this.userStore.setCurrentUser(null)
+
+		return this.authService.login(user, pass).pipe(
+			switchMap((authResponse) => this.userService.fetchProfile(authResponse.token)),
+			tap((userProfile) => {
+				this.userStore.setCurrentUser(userProfile)
+				this.userStore.setLoading(false)
+				console.log('Login flow completed!')
+			})
+		)
+	}
+}
+```
+
+**4. Atualize o `LoginComponent`:**
+O componente agora injeta o Facade para disparar a ação e o Store para ler o estado.
+
+```typescript
+// login.component.ts
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core'
+import { LoginFacadeService } from './login-facade.service'
+import { CurrentUserStore } from './current-user.store'
+
+@Component({
+	selector: 'app-login',
+	standalone: true,
+	template: `
+		<h2>Login</h2>
+		@if (store.isLoading()) {
+			<p>Loading...</p>
+		}
+
+		@if (store.currentUser(); as user) {
+			<p>Welcome, {{ user.name }}!</p>
+		}
+
+		<button (click)="onLoginClick()" [disabled]="store.isLoading()">Login</button>
+	`,
+	changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class LoginComponent {
+	// Injeta o Store para ler o estado
+	private store = inject(CurrentUserStore)
+	// Injeta o Facade para disparar ações
+	private facade = inject(LoginFacadeService)
+
+	onLoginClick() {
+		this.facade.login('user', 'pass').subscribe()
+	}
+}
+```
+
+Com essa estrutura, o componente fica limpo e desacoplado da lógica de negócio e do gerenciamento de estado. Ele apenas lê o estado do `CurrentUserStore` e delega a ação de login para o `LoginFacadeService`.
+
+## Evite Fazer com que o Facade Service Vire uma God Class
+
+Um risco ao usar o Facade Pattern é criar uma "God Class" — uma classe que assume responsabilidades demais e se torna um monólito difícil de manter. Se um `UserFacade` começa a lidar com login, registro, atualização de perfil, recuperação de senha e gerenciamento de permissões, ele rapidamente se tornará complexo e violará o Princípio da Responsabilidade Única.
+
+Para evitar isso, mantenha seus Facades focados em uma única ação ou fluxo de negócio. Em vez de ter um `UserFacade` genérico, crie Facades mais específicos:
+
+- `LoginFacadeService`: Orquestra apenas o fluxo de login.
+- `RegistrationFacadeService`: Orquestra o processo de registro de novos usuários.
+- `ProfileUpdateFacadeService`: Lida com a lógica de atualização do perfil do usuário.
+
+Essa abordagem garante que cada Facade permaneça pequeno, coeso e fácil de entender. O objetivo do Facade é simplificar um subsistema, e não se tornar um novo subsistema complexo.
+
+---
+
+<Ads />
+
+## Conclusão
+
+O Facade Pattern, quando combinado com um serviço de Store, é uma ferramenta poderosa na arquitetura de aplicações Angular. Ele permite a orquestração de fluxos de negócio complexos de forma limpa e desacoplada. Ao introduzir uma camada de abstração para ações (o Facade) e uma fonte única para o estado (o Store), simplificamos drasticamente a lógica nos componentes, reduzindo o acoplamento e melhorando a organização geral do código.
+
+No entanto, é fundamental ter disciplina ao aplicar este padrão. Evitar a criação de "God Classes", mantendo cada Facade focado em uma única responsabilidade, é a chave para colher seus benefícios sem introduzir novos problemas de manutenção. Com uma implementação cuidadosa que separa claramente a orquestração de ações do gerenciamento de estado, o Facade Pattern pode levar sua arquitetura Angular a um novo nível de clareza e escalabilidade.
