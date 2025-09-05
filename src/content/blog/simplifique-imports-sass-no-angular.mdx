@@ -1,0 +1,135 @@
+---
+heroImage: /images/posts/Simplifique-Imports-Sass.jpg
+category: Angular
+description: 'Aprenda a usar stylePreprocessorOptions no angular.json para simplificar imports Sass, evitando caminhos relativos.'
+pubDate: '2025-09-11'
+draft: false
+tags:
+  - angular
+  - sass
+title: 'Simplifique Imports Sass no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+O arquivo `angular.json` é o coração da configuração de um projeto Angular, controlando desde o build e os testes até a forma como os assets são gerenciados. Muitas vezes, focamos nas configurações mais comuns, como `styles` e `scripts`, e deixamos de explorar outras propriedades poderosas que podem otimizar significativamente nosso fluxo de trabalho e a organização do código.
+
+Uma dessas propriedades é a `stylePreprocessorOptions`, uma ferramenta essencial para quem utiliza pré-processadores de CSS como Sass ou SCSS. Com ela, podemos configurar opções específicas que são passadas diretamente para o compilador do pré-processador. Isso nos permite, por exemplo, criar caminhos de importação globais, facilitando o uso da regra `@use` do Sass e tornando nossos arquivos de estilo mais limpos, encapsulados e fáceis de manter.
+
+### O que é e para que serve a `stylePreprocessorOptions`?
+
+A propriedade `stylePreprocessorOptions` é uma chave de configuração que pode ser adicionada dentro da seção `options` da configuração de `build` (e `test`) no arquivo `angular.json`. Sua principal função é permitir que o desenvolvedor passe um objeto de configuração diretamente para o pré-processador de CSS que está sendo utilizado no projeto.
+
+Essa configuração é extremamente útil para centralizar definições que afetam todos os arquivos de estilo. Em vez de lidar com caminhos relativos complexos em cada `@use`, você pode instruir o compilador a sempre considerar um determinado diretório como base. Isso melhora a organização do projeto e a experiência de desenvolvimento, pois o código se torna mais modular e menos suscetível a quebras quando a estrutura de pastas é alterada.
+
+### Como utilizar a opção `includePaths` para simplificar o `@use`
+
+A opção mais comum e útil dentro de `stylePreprocessorOptions` é a `includePaths`. Ela resolve um problema muito frequente: a necessidade de usar caminhos relativos longos com a regra `@use` para carregar módulos Sass globais, como variáveis e mixins.
+
+Imagine que o arquivo `src/app/components/header/header.component.scss` precise usar as variáveis de `src/styles/_variables.scss`. A regra de importação ficaria assim: `@use '../../../../styles/variables' as vars;`. Além de longo, esse caminho é frágil. A `includePaths` resolve isso. Ela funciona como um array de strings, onde cada string é um caminho que o compilador Sass usará como base para procurar os arquivos. Ao adicionar `src/styles` no `includePaths`, a mesma regra pode ser reescrita de forma muito mais simples: `@use 'variables' as vars;`.
+
+### Exemplo prático de configuração
+
+Vamos ver na prática como configurar e utilizar o `includePaths` para simplificar o uso de módulos Sass globais em um projeto Angular.
+
+**1. Estrutura do projeto**
+
+Primeiro, vamos criar uma pasta `styles` na raiz do `src` para nossos arquivos globais:
+
+```
+src/
+├── app/
+├── assets/
+├── environments/
+└── styles/
+    ├── _variables.scss
+    └── _mixins.scss
+```
+
+**2. Conteúdo dos arquivos de estilo**
+
+Adicione algum conteúdo aos arquivos. Por exemplo:
+
+- **src/styles/\_variables.scss**
+
+  ```scss
+  $primary-color: #007bff;
+  $font-family-base: sans-serif;
+  ```
+
+- **src/styles/\_mixins.scss**
+
+  ```scss
+  @mixin flex-center {
+  	display: flex;
+  	justify-content: center;
+  	align-items: center;
+  }
+  ```
+
+**3. Configurando o `angular.json`**
+
+Agora, abra o arquivo `angular.json` e encontre a seção `build` do seu projeto. Dentro de `options`, adicione a propriedade `stylePreprocessorOptions` com o `includePaths`:
+
+```json
+{
+	"$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+	"projects": {
+		"seu-projeto": {
+			"projectType": "application",
+			"architect": {
+				"build": {
+					"builder": "@angular-devkit/build-angular:browser",
+					"options": {
+						"outputPath": "dist/seu-projeto",
+						"index": "src/index.html",
+						"main": "src/main.ts",
+						"styles": ["src/styles.scss"],
+						"stylePreprocessorOptions": {
+							"includePaths": ["src/styles"]
+						}
+						// ...
+					}
+					// ...
+				}
+				// ...
+			}
+		}
+	}
+}
+```
+
+**4. Usando os módulos com `@use`**
+
+Com a configuração aplicada, você pode carregar seus módulos globais em qualquer componente de forma direta. Note que com `@use`, as variáveis e mixins não são globais; elas pertencem ao namespace que você define (por exemplo, `as vars`).
+
+- **some.component.scss**
+
+  ```scss
+  // Carrega os módulos com caminhos simplificados
+  @use 'variables' as vars;
+  @use 'mixins';
+
+  .meu-componente {
+  	// Usa as variáveis através do namespace 'vars'
+  	font-family: vars.$font-family-base;
+  	color: vars.$primary-color;
+
+  	// Usa o mixin através do namespace padrão (o nome do arquivo)
+  	@include mixins.flex-center;
+  }
+  ```
+
+**Importante:** Após alterar o `angular.json`, é necessário reiniciar o servidor de desenvolvimento (`ng serve`) para que as novas configurações sejam aplicadas.
+
+---
+
+<Ads />
+
+### Conclusão
+
+A configuração da propriedade `stylePreprocessorOptions` no `angular.json` é um recurso poderoso para otimizar a gestão de estilos em um projeto Angular. Ao utilizá-la em conjunto com a regra `@use` do Sass, eliminamos caminhos relativos frágeis e promovemos um código mais limpo e modular, onde as dependências de estilo são explícitas e encapsuladas.
+
+Adotar essa prática desde o início do desenvolvimento, especialmente em aplicações de média a grande escala, contribui para uma arquitetura de estilos mais robusta, escalável e fácil de manter. É um pequeno ajuste de configuração que resulta em grandes benefícios para a produtividade e a qualidade do código, permitindo que a equipe se concentre em construir interfaces incríveis com um CSS bem organizado.
