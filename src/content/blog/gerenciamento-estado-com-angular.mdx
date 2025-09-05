@@ -1,0 +1,220 @@
+---
+heroImage: /images/posts/Gerenciamento-de-Estado.jpg
+category: Angular
+description: 'Aprenda a gerenciar o estado em suas aplicações Angular. Explore soluções com Signals, RxJS e conheça bibliotecas como NgRx para projetos robustos.'
+pubDate: '2025-09-05'
+draft: false
+tags:
+  - angular
+title: 'Gerenciamento de Estado com Angular Signals'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Gerenciar o estado de uma aplicação é uma das tarefas mais críticas no desenvolvimento front-end. O estado pode ser definido como os dados que a sua aplicação precisa armazenar e manipular ao longo do tempo. Isso inclui informações do usuário, dados vindos de uma API, o estado da interface (como temas ou modais abertas) e muito mais. Em aplicações pequenas, o gerenciamento de estado pode ser simples, utilizando apenas a comunicação entre componentes via `input()` e `output()`.
+
+No entanto, à medida que a aplicação cresce em complexidade, compartilhar estado entre componentes que não têm uma relação direta de pai e filho se torna um desafio. É nesse ponto que estratégias de gerenciamento de estado mais estruturadas se tornam essenciais. O Angular oferece flexibilidade para lidar com essa complexidade, permitindo desde a criação de soluções simples com Services e Signals até a adoção de bibliotecas mais robustas e opinativas, como NgRx e NGXS.
+
+## O que é Gerenciamento de Estado?
+
+Gerenciamento de Estado (State Management) é a prática de centralizar e controlar a "fonte da verdade" dos dados de uma aplicação. Em vez de cada componente manter seu próprio estado local de forma isolada, o estado compartilhado é armazenado em um local central, geralmente um serviço.
+
+Isso torna o fluxo de dados na aplicação mais previsível e fácil de depurar. Quando um estado precisa ser modificado, a alteração é feita nesse local central, e todos os componentes que dependem desse estado são notificados e atualizados automaticamente. Essa abordagem evita inconsistências e simplifica a comunicação entre partes distantes da sua aplicação.
+
+## Quando Usar?
+
+Embora seja uma ferramenta poderosa, nem toda aplicação precisa de uma solução complexa de gerenciamento de estado desde o início. Para comunicação simples entre componentes pai e filho, as funções `input()` e `output()` são perfeitamente adequadas.
+
+A necessidade de uma estratégia de gerenciamento de estado mais elaborada surge quando:
+
+- Múltiplos componentes que não são diretamente relacionados precisam acessar e manipular os mesmos dados.
+- O estado precisa persistir durante a navegação entre diferentes rotas.
+- A lógica de negócio para alterar o estado é complexa e precisa ser reutilizada em vários locais.
+- Você precisa de um fluxo de dados unidirecional e previsível para facilitar a depuração e a manutenção.
+
+## Cenários onde pode ser aplicado
+
+O gerenciamento de estado é útil em diversos cenários comuns em aplicações web modernas:
+
+- **Autenticação de Usuário:** Manter o estado de login, informações do perfil do usuário e suas permissões acessíveis em toda a aplicação.
+- **Carrinho de Compras:** Gerenciar os itens, a quantidade e o valor total de um carrinho de compras, que pode ser atualizado a partir de várias páginas e componentes.
+- **Estado da Interface (UI State):** Controlar elementos globais da interface, como a visibilidade de um menu lateral, o tema (claro ou escuro) da aplicação ou o idioma selecionado.
+- **Dados de API Compartilhados:** Armazenar em cache dados buscados de uma API para que diferentes componentes possam exibi-los sem a necessidade de múltiplas requisições.
+
+## Como criar apenas com Angular Services e Signals
+
+Com a introdução dos Signals, o Angular oferece uma maneira nativa, reativa e muito eficiente de gerenciar o estado. Combinando Services com Signals, podemos criar uma solução de gerenciamento de estado leve e poderosa sem a necessidade de bibliotecas externas.
+
+Nesta abordagem, o serviço detém o estado (os signals), expõe uma versão somente leitura para os componentes e fornece métodos públicos para modificar o estado.
+
+**`counter.service.ts`**
+
+```typescript
+import { Injectable, signal, computed } from '@angular/core'
+
+@Injectable({
+	providedIn: 'root'
+})
+export class CounterService {
+	// 1. O estado é privado para evitar modificações externas diretas.
+	private count = signal(0)
+
+	// 2. Expomos o estado através de um computed para garantir que seja somente leitura.
+	public readonly count = computed(() => this.count())
+
+	// 3. Criamos um estado derivado (computed signal).
+	public readonly isEven = computed(() => this.count() % 2 === 0)
+
+	// 4. Métodos públicos para modificar o estado de forma controlada.
+	public increment(): void {
+		this.count.update((current) => current + 1)
+	}
+
+	public decrement(): void {
+		this.count.update((current) => current - 1)
+	}
+}
+```
+
+**`counter.component.ts`**
+
+```typescript
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core'
+import { CounterService } from './counter.service'
+
+@Component({
+	selector: 'app-counter',
+	standalone: true,
+	templateUrl: './counter.component.html',
+	changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class CounterComponent {
+	private counterService = inject(CounterService)
+
+	// O componente apenas lê os signals do serviço.
+	public count = this.counterService.count
+	public isEven = this.counterService.isEven
+
+	// As ações do componente chamam os métodos do serviço.
+	public increment(): void {
+		this.counterService.increment()
+	}
+
+	public decrement(): void {
+		this.counterService.decrement()
+	}
+}
+```
+
+**`counter.component.html`**
+
+```html
+<div>
+	<h2>Contador com Signals</h2>
+	<p>Valor atual: {{ count() }}</p>
+
+	@if (isEven()) {
+	<p>O número é par.</p>
+	} @else {
+	<p>O número é ímpar.</p>
+	}
+
+	<button (click)="increment()">Incrementar</button>
+	<button (click)="decrement()">Decrementar</button>
+</div>
+```
+
+---
+
+<Ads />
+
+## Como criar usando Services Angular e RxJS (solução mais antiga)
+
+Antes dos Signals, a abordagem comum para gerenciar estado reativo em Angular era usar Services com `BehaviorSubject` do RxJS. Um `BehaviorSubject` armazena o valor mais recente e o emite para novos inscritos, sendo ideal para representar o estado.
+
+O serviço mantém um `BehaviorSubject` privado e expõe sua versão `Observable` para os componentes.
+
+**`counter-rxjs.service.ts`**
+
+```typescript
+import { Injectable } from '@angular/core'
+import { BehaviorSubject } from 'rxjs'
+
+@Injectable({
+	providedIn: 'root'
+})
+export class CounterRxjsService {
+	private count = new BehaviorSubject(0)
+
+	// Expõe um Observable para que os componentes não possam emitir novos valores.
+	public readonly count = this.count.asObservable()
+
+	public increment(): void {
+		this.count.next(this.count.value + 1)
+	}
+
+	public decrement(): void {
+		this.count.next(this.count.value - 1)
+	}
+}
+```
+
+**`counter-rxjs.component.ts`**
+
+```typescript
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { CounterRxjsService } from './counter-rxjs.service'
+
+@Component({
+	selector: 'app-counter-rxjs',
+	standalone: true,
+	imports: [CommonModule], // Necessário para o pipe 'async'
+	templateUrl: './counter-rxjs.component.html',
+	changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class CounterRxjsComponent {
+	private counterService = inject(CounterRxjsService)
+
+	public count = this.counterService.count
+
+	public increment(): void {
+		this.counterService.increment()
+	}
+
+	public decrement(): void {
+		this.counterService.decrement()
+	}
+}
+```
+
+**`counter-rxjs.component.html`**
+
+```html
+<div>
+	<h2>Contador com RxJS</h2>
+
+	@if (count | async; as value) {
+	<p>Valor atual: {{ value }}</p>
+	}
+
+	<button (click)="increment()">Incrementar</button>
+	<button (click)="decrement()">Decrementar</button>
+</div>
+```
+
+## Bibliotecas que podem ser usadas para soluções mais robustas
+
+Para aplicações de grande escala, com fluxos de estado muito complexos e interconectados, o uso de bibliotecas dedicadas pode trazer mais estrutura e previsibilidade. As mais populares no ecossistema Angular incluem [**NgRx**](https://ngrx.io/), [**NGXS**](https://www.ngxs.io/), [**Elf**](https://ngneat.github.io/elf/) e [**Akita**](https://opensource.salesforce.com/akita/) (que não é mais mantida ativamente).
+
+[**NgRx**](https://ngrx.io/) e [**NGXS**](https://www.ngxs.io/) são inspiradas na arquitetura Redux e introduzem conceitos como _Store_, _Actions_, _Reducers_ e _Selectors_. Elas impõem um fluxo de dados unidirecional estrito, tornando o estado da aplicação extremamente previsível.
+
+Para desenvolvedores que preferem uma abordagem que não seja baseada em Redux, [**Elf**](https://ngneat.github.io/elf/) e [**Akita**](https://opensource.salesforce.com/akita/) oferecem uma alternativa, focando em um modelo mais orientado a objetos com stores que se assemelham a serviços, o que pode ser mais intuitivo para alguns.
+
+## Conclusão
+
+O gerenciamento de estado é um aspecto fundamental do desenvolvimento de aplicações Angular, e a plataforma oferece um espectro de soluções para diferentes níveis de complexidade. A abordagem moderna com Services e Signals é a recomendação para a maioria dos casos de uso, pois combina simplicidade, reatividade e excelente desempenho com as ferramentas nativas do framework. A solução com RxJS, embora mais antiga, ainda é robusta e amplamente utilizada em muitos projetos existentes.
+
+A escolha da ferramenta certa depende das necessidades do seu projeto. Comece com a solução mais simples e nativa que o Angular oferece. Se a complexidade da sua aplicação crescer a ponto de justificar uma arquitetura mais rígida e com mais ferramentas de depuração, considere explorar bibliotecas dedicadas. O importante é manter seu fluxo de dados organizado, previsível e fácil de manter.
