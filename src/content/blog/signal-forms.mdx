@@ -1,0 +1,389 @@
+---
+heroImage: /images/posts/Signal-Forms.jpg
+category: Angular
+description: 'Aprenda a criar formulários reativos e modernos no Angular com Signal Forms. Guia completo com validações, schemas customizados e exemplos práticos.'
+pubDate: '2025-09-23'
+draft: false
+tags:
+  - angular
+  - forms
+  - signals
+title: 'Criando Formulários Reativos com Signal Forms'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Os Signal Forms representam um avanço significativo na maneira como lidamos com formulários no Angular, preenchendo a lacuna entre a nova reatividade baseada em Signals e a interação do usuário.
+
+Embora atualmente em estado experimental, essa nova biblioteca oferece uma visão promissora para o futuro do framework, simplificando o gerenciamento de estado e a validação de forma mais reativa e intuitiva.
+
+Neste artigo, vamos mergulhar nos Signal Forms.
+
+Abordaremos o que são, por que são importantes e como utilizá-los na prática, desde a criação de um formulário básico até a implementação de validações síncronas, assíncronas e esquemas reutilizáveis.
+
+Para ilustrar os conceitos, usaremos como exemplo um formulário de cadastro de ingressos para eventos.
+
+## O que é Signal Forms?
+
+Signal Forms é uma nova biblioteca experimental no Angular (`@angular/forms/signals`) que permite criar e gerenciar formulários usando Signals.
+
+Em vez de depender de `Observables` e de uma abordagem mais verbosa como nos Reactive Forms tradicionais, os Signal Forms integram-se perfeitamente ao sistema de reatividade granular do Angular, tornando o código mais limpo, previsível e otimizado para um futuro sem Zone.js.
+
+## Por que precisamos de Signal Forms?
+
+Com a introdução dos Signals, o Angular ganhou um sistema de reatividade mais simples e eficiente.
+
+No entanto, os formulários reativos tradicionais não se beneficiavam diretamente desse novo paradigma.
+
+Os Signal Forms surgem para resolver essa questão, oferecendo:
+
+- **Reatividade Granular**: As atualizações acontecem de forma mais precisa, apenas onde o estado realmente mudou, melhorando a performance.
+- **API Simplificada**: A API é mais enxuta e intuitiva, especialmente para criar controles customizados, eliminando a complexidade do `ControlValueAccessor`.
+- **Experiência de Desenvolvimento Aprimorada**: O código se torna mais declarativo e fácil de ler, alinhando-se completamente com a filosofia dos Signals.
+- **Prontidão para o Futuro (Zoneless)**: Eles são projetados para funcionar perfeitamente em aplicações sem Zone.js, o que representa o futuro da performance no Angular.
+
+## Como criar um Signal Form
+
+Criar um Signal Form envolve basicamente dois passos: definir o modelo do formulário na classe do componente usando a função `form` e conectar esse modelo ao template HTML usando a diretiva `[control]`.
+
+Vamos criar um formulário para registrar um ingresso.
+
+Primeiro, definimos a interface do nosso modelo:
+
+```typescript
+// ticket.model.ts
+export interface Ticket {
+	attendeeName: string
+	ticketType: 'VIP' | 'Standard' | 'Economy'
+	eventId: string
+}
+```
+
+Em seguida, no componente, criamos o formulário.
+
+Usaremos um `signal` para manter o estado do nosso ingresso e a função `form` para criar a estrutura do Signal Form.
+
+```typescript
+// ticket-form.component.ts
+import { Component, signal } from '@angular/core'
+import { Control } from '@angular/forms/signals'
+import { form } from '@angular/forms/signals'
+import { Ticket } from './ticket.model'
+
+@Component({
+	selector: 'app-ticket-form',
+	standalone: true,
+	imports: [Control],
+	templateUrl: './ticket-form.component.html'
+})
+export class TicketFormComponent {
+	// 1. Define o estado inicial com um signal
+	ticket = signal<Ticket>({
+		attendeeName: '',
+		ticketType: 'Standard',
+		eventId: 'ng-conf-2025'
+	})
+
+	// 2. Cria o Signal Form a partir do estado
+	ticketForm = form(this.ticket)
+}
+```
+
+Agora, no template, conectamos cada campo de entrada ao seu respectivo controle no `ticketForm` usando a diretiva `[control]`.
+
+```html
+<form>
+	<div class="form-group">
+		<label for="attendeeName">Nome do Participante</label>
+		<input id="attendeeName" class="form-control" [control]="ticketForm.attendeeName" />
+	</div>
+
+	<div class="form-group">
+		<label for="ticketType">Tipo de Ingresso</label>
+		<select id="ticketType" class="form-control" [control]="ticketForm.ticketType">
+			<option value="VIP">VIP</option>
+			<option value="Standard">Standard</option>
+			<option value="Economy">Economy</option>
+		</select>
+	</div>
+
+	<div class="form-group">
+		<label for="eventId">ID do Evento</label>
+		<input id="eventId" class="form-control" [control]="ticketForm.eventId" readonly />
+	</div>
+</form>
+```
+
+Com isso, nosso formulário está funcionando.
+
+Qualquer alteração nos campos do HTML será refletida no signal `ticket`, e vice-versa, estabelecendo um vínculo reativo bidirecional.
+
+## Como submeter valores do formulário com a função "submit"
+
+Para lidar com a submissão de dados, os Signal Forms fornecem a função `submit`.
+
+Ela garante que a lógica de submissão só seja executada se o formulário for válido.
+
+Vamos adicionar um método `save` ao nosso componente que utiliza essa função.
+
+```typescript
+// ticket-form.component.ts
+import { submit } from '@angular/forms/signals'
+// ...
+
+export class TicketFormComponent {
+	// ... (ticket e ticketForm)
+
+	save(): void {
+		submit(this.ticketForm, async (form) => {
+			console.log('Formulário válido! Valor:', form().value())
+			// Aqui você chamaria seu serviço para salvar os dados
+			// Ex: await this.ticketService.save(form().value());
+
+			// Se o serviço retornar um erro, você pode retorná-lo aqui
+			// para que seja adicionado ao estado de erros do formulário.
+			return null // Retorna null em caso de sucesso
+		})
+	}
+}
+```
+
+No template, adicionamos um botão e vinculamos seu evento `(click)` diretamente ao nosso método `save`.
+
+É importante usar `type="button"` para evitar que o navegador tente submeter o formulário da maneira tradicional.
+
+```html
+<form>
+	<button type="button" (click)="save()" class="btn btn-primary">Salvar</button>
+</form>
+```
+
+## Como usar validações síncronas
+
+As validações são definidas diretamente no esquema do formulário, passado como segundo argumento para a função `form`.
+
+Signal Forms fornecem validadores nativos como `required` e `minLength`, e permitem criar validadores customizados com a função `validate`.
+
+```typescript
+// ticket-form.component.ts
+import { form, required, minLength, validate, customError } from '@angular/forms/signals'
+
+// ...
+ticketForm = form(this.ticket, (path) => {
+	// Validadores nativos
+	required(path.attendeeName, { message: 'O nome é obrigatório.' })
+	minLength(path.attendeeName, 3, { message: 'O nome precisa de pelo menos 3 caracteres.' })
+
+	// Validador customizado
+	const allowedTypes = ['VIP', 'Standard']
+	validate(path.ticketType, (ctx) => {
+		const value = ctx.value()
+		if (allowedTypes.includes(value)) {
+			return null // Válido
+		}
+		return customError({
+			kind: 'ticketType',
+			message: 'Apenas os tipos VIP e Standard são permitidos no momento.'
+		})
+	})
+})
+// ...
+```
+
+Para exibir os erros, podemos acessar o signal `errors()` de cada controle e mostrá-los no template.
+
+```html
+<div class="form-group">
+	<label for="attendeeName">Nome do Participante</label>
+	<input id="attendeeName" class="form-control" [control]="ticketForm.attendeeName" />
+
+	@for (error of ticketForm.attendeeName().errors(); track error) {
+	<div class="validation-error">{{ error.message }}</div>
+	}
+</div>
+```
+
+## Como usar validações assíncronas
+
+Para validações que precisam de uma consulta externa, como uma chamada HTTP, usamos `validateAsync`.
+
+Essa função define como os parâmetros são extraídos, como o recurso assíncrono é criado (geralmente uma chamada de serviço) e como o resultado é mapeado para um erro de validação.
+
+Vamos simular uma verificação para saber se o nome do participante já está registrado no evento.
+
+```typescript
+// ticket-form.component.ts
+import { validateAsync, rxResource } from '@angular/forms/signals'
+import { of } from 'rxjs'
+import { delay, map } from 'rxjs/operators'
+
+// Simula uma chamada de serviço
+function checkNameAvailability(name: string): Observable<boolean> {
+	const existingNames = ['John Doe', 'Jane Smith']
+	return of(null).pipe(
+		delay(1000), // Simula latência de rede
+		map(() => !existingNames.includes(name))
+	)
+}
+
+// ...
+ticketForm = form(this.ticket, (path) => {
+	// ... validações síncronas ...
+
+	validateAsync(path.attendeeName, {
+		params: (ctx) => ({ value: ctx.value() }),
+		factory: (params) =>
+			rxResource({
+				params,
+				stream: (p) => checkNameAvailability(p.params.value)
+			}),
+		errors: (isAvailable, ctx) => {
+			if (!isAvailable) {
+				return { kind: 'nameTaken', message: 'Este nome já está em uso.' }
+			}
+			return null
+		}
+	})
+})
+// ...
+```
+
+Enquanto a validação assíncrona está em execução, o estado `pending()` do controle será `true`, o que pode ser usado para mostrar um feedback visual, como um spinner.
+
+```html
+@if (ticketForm.attendeeName().pending()) {
+<span>Verificando disponibilidade...</span>
+}
+```
+
+---
+
+<Ads />
+
+---
+
+## Validadores HTTP
+
+Para validações assíncronas que envolvem chamadas HTTP, Signal Forms oferecem um atalho ainda mais simples: `validateHttp`.
+
+Esta função simplifica o processo, exigindo apenas a definição da requisição e o mapeamento da resposta para um erro de validação.
+
+Vamos adaptar nosso exemplo para validar se um `eventId` existe, consultando uma API externa.
+
+```typescript
+// ticket.schema.ts
+import { validateHttp } from '@angular/forms/signals'
+// ...
+
+function validateEventId(path: FieldPath<string>) {
+	validateHttp(path, {
+		// Define a requisição a ser feita com o valor do campo
+		request: (ctx) => ({
+			url: `https://my-api.com/events/${ctx.value()}`
+		}),
+		// Mapeia a resposta para um erro ou null
+		errors: (response: { id: string } | null, ctx) => {
+			if (!response) {
+				return {
+					kind: 'invalidEventId',
+					message: `O evento com ID "${ctx.value()}" não foi encontrado.`
+				}
+			}
+			return null // Válido se a resposta não for nula/vazia
+		}
+	})
+}
+```
+
+## Criando Controles de Formulário Customizados
+
+Uma das grandes vantagens dos Signal Forms é a facilidade de criar seus próprios componentes de formulário.
+
+A complexa API `ControlValueAccessor` foi substituída pela simples interface `FormValueControl<T>`.
+
+Para criar um widget customizado, seu componente só precisa implementar essa interface, que exige um `ModelSignal` chamado `value`.
+
+Vamos criar um seletor de quantidade de ingressos:
+
+```typescript
+// ticket-quantity.component.ts
+import { Component, model, input } from '@angular/core'
+import { FormValueControl, ValidationError } from '@angular/forms/signals'
+
+@Component({
+	selector: 'app-ticket-quantity',
+	standalone: true,
+	template: `
+		<div>
+			<button type="button" (click)="decrease()" [disabled]="disabled() || value() <= 1">-</button>
+			<span>{{ value() }}</span>
+			<button type="button" (click)="increase()" [disabled]="disabled()">+</button>
+		</div>
+	`
+})
+export class TicketQuantityComponent implements FormValueControl<number> {
+	value = model(1)
+	disabled = input(false)
+	errors = input<readonly ValidationError[]>([])
+
+	increase(): void {
+		this.value.update((v) => v + 1)
+	}
+
+	decrease(): void {
+		this.value.update((v) => Math.max(v - 1, 1)) // Mínimo de 1 ingresso
+	}
+}
+```
+
+Agora, você pode usar este componente em seu formulário com a diretiva `[control]` como se fosse um campo nativo, desde que o modelo do formulário principal tenha uma propriedade correspondente.
+
+## Como criar custom schemas
+
+Para melhorar a organização e a reutilização, especialmente em formulários complexos, você pode extrair o esquema de validação para uma constante separada usando a função `schema`.
+
+```typescript
+// ticket.schema.ts
+import { schema, required, minLength } from '@angular/forms/signals'
+import { Ticket } from './ticket.model'
+
+export const ticketSchema = schema<Ticket>((path) => {
+	required(path.attendeeName, { message: 'O nome é obrigatório.' })
+	minLength(path.attendeeName, 3, { message: 'O nome precisa de pelo menos 3 caracteres.' })
+	// ... outras validações ...
+})
+```
+
+Depois, basta passar o schema para a função `form` no componente, tornando o código do componente mais limpo e o esquema de validação mais fácil de manter e testar.
+
+```typescript
+// ticket-form.component.ts
+import { ticketSchema } from './ticket.schema'
+
+// ...
+export class TicketFormComponent {
+	ticket = signal<Ticket>({
+		/* ... */
+	})
+	ticketForm = form(this.ticket, ticketSchema)
+	// ...
+}
+```
+
+## Conclusão
+
+Os Signal Forms são uma evolução natural e poderosa para o gerenciamento de formulários no Angular.
+
+Eles alinham o desenvolvimento de formulários com o paradigma reativo dos Signals, resultando em um código mais limpo, performático e fácil de manter.
+
+A API simplificada para validação, o suporte a estruturas complexas e a facilidade de criar controles customizados resolvem muitos dos desafios enfrentados com as abordagens anteriores.
+
+Embora ainda experimentais, os Signal Forms já apontam para um futuro onde a reatividade granular estará presente em todos os cantos de uma aplicação Angular.
+
+Adotar e fornecer feedback sobre essa nova biblioteca é uma oportunidade para os desenvolvedores não apenas se prepararem para o futuro do framework, mas também para ajudar a moldá-lo, contribuindo para uma experiência de desenvolvimento ainda melhor.
+
+## Referências
+
+- [All About Angular's New Signal Forms](https://www.angulararchitects.io/en/blog/all-about-angulars-new-signal-forms/)
