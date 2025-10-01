@@ -317,23 +317,21 @@ import { FormValueControl, ValidationError } from '@angular/forms/signals'
 	standalone: true,
 	template: `
 		<div>
-			<button type="button" (click)="decrease()" [disabled]="disabled() || value() <= 1">-</button>
+			<button type="button" (click)="decrease()" [disabled]="value() <= 1">-</button>
 			<span>{{ value() }}</span>
-			<button type="button" (click)="increase()" [disabled]="disabled()">+</button>
+			<button type="button" (click)="increase()">+</button>
 		</div>
 	`
 })
 export class TicketQuantityComponent implements FormValueControl<number> {
 	value = model(1)
-	disabled = input(false)
-	errors = input<readonly ValidationError[]>([])
 
 	increase(): void {
 		this.value.update((v) => v + 1)
 	}
 
 	decrease(): void {
-		this.value.update((v) => Math.max(v - 1, 1)) // Mínimo de 1 ingresso
+		this.value.update((v) => v - 1)
 	}
 }
 ```
