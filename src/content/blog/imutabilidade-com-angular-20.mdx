@@ -1,0 +1,172 @@
+---
+heroImage: /images/posts/Imutabilidade-com-Signals.jpg
+category: Angular
+description: 'Garanta a performance e evite bugs no Angular dominando a imutabilidade. Entenda como atualizar arrays/objetos e por que ela é crucial para os Signals e Inputs.'
+pubDate: '2025-10-08'
+draft: false
+tags:
+  - angular
+  - typescript
+title: 'Imutabilidade com Signals: Performance no Angular'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+**Imutabilidade** é um princípio de programação no qual, uma vez que um dado ou objeto é criado, ele não pode ser alterado. Em vez de modificar um objeto diretamente (uma mutação), você cria uma **nova cópia** do objeto, aplicando as alterações desejadas a essa nova cópia. O objeto original permanece intacto e imutável.
+
+No desenvolvimento front-end moderno, especialmente em frameworks como o Angular, o uso da imutabilidade tornou-se uma prática recomendada. Ela é fundamental para garantir a previsibilidade do estado da aplicação, facilitando a depuração e o desenvolvimento de recursos complexos.
+
+### Problemas Causados pela Mutabilidade
+
+O principal problema que a mutabilidade (alteração direta de dados) causa é a **dificuldade de rastrear mudanças** em sistemas com estado complexo e compartilhado. Em uma aplicação front-end, o estado pode ser compartilhado por vários componentes e serviços.
+
+Quando você modifica um objeto mutável diretamente (ex.: `minhaLista.push(novoItem)`), isso gera dois problemas principais:
+
+1.  **Geração de Efeitos Colaterais e Bugs:** Mudanças inesperadas em um local podem afetar o comportamento de outro local, criando **efeitos colaterais** difíceis de rastrear e depurar. Se dois componentes dependem do mesmo objeto, a mutação feita por um afeta o outro sem que ele tenha sido notificado explicitamente.
+
+2.  **Detecção de Mudanças Ineficiente:** O processo de detecção de mudanças do framework, que verifica se o estado da aplicação mudou e precisa atualizar a tela, torna-se ineficiente. Frameworks precisam realizar uma "deep comparison" (comparação profunda) para checar se algo dentro do objeto foi alterado, o que é lento.
+
+### Qual Solução a Imutabilidade Oferece?
+
+A imutabilidade resolve esses problemas ao garantir que toda alteração de estado resulte em uma **nova referência** de objeto ou array, oferecendo dois grandes benefícios:
+
+1.  **Rastreabilidade e Previsibilidade:** Ela força um fluxo de dados previsível. Se a referência do objeto é nova, algo definitivamente mudou, eliminando a fonte de **bugs** por efeitos colaterais. O estado antigo está garantido como inalterado.
+
+2.  **Melhoria de Performance na Detecção de Mudanças:** Ao garantir que a detecção de mudanças só precise comparar referências (o objeto antigo vs. o novo), frameworks como o Angular (especialmente com a estratégia **`OnPush`** ou **Signals**) podem rapidamente determinar que o estado mudou. Uma simples checagem de referência é muito mais rápida do que uma checagem profunda, melhorando significativamente a **performance** da aplicação.
+
+### Aplicando Imutabilidade em Arrays e Objetos com TypeScript
+
+Em JavaScript e TypeScript, arrays e objetos são mutáveis por padrão. Para aplicar o princípio de imutabilidade, você deve usar técnicas que garantam a criação de novas referências.
+
+#### Objetos
+
+Para atualizar propriedades de um objeto de forma imutável, utilize o **spread operator (`...`)** ou a função `Object.assign()`.
+
+```typescript
+interface User {
+	id: number
+	name: string
+	isActive: boolean
+}
+
+const originalUser: User = { id: 1, name: 'Alice', isActive: true }
+
+// ❌ MODO MUTÁVEL (Evitar)
+// originalUser.isActive = false;
+
+// ✅ MODO IMUTÁVEL (Recomendado: Spread Operator)
+const updatedUser: User = {
+	...originalUser, // Copia todas as propriedades do objeto original
+	isActive: false // Sobrescreve a propriedade desejada
+}
+
+// O objeto original (originalUser) permanece inalterado.
+```
+
+#### Arrays
+
+Para adicionar, remover ou modificar itens de um array de forma imutável, use métodos que **retornam um novo array**, como `map`, `filter`, ou combine o spread operator.
+
+| Operação      | Método Imutável         | Exemplo                                                                                              |
+| :------------ | :---------------------- | :--------------------------------------------------------------------------------------------------- |
+| **Adicionar** | Spread Operator (`...`) | `const newArray = [...originalArray, newItem];`                                                      |
+| **Remover**   | `filter()`              | `const newArray = originalArray.filter(item => item.id !== idToRemove);`                             |
+| **Atualizar** | `map()`                 | `const newArray = originalArray.map(item => item.id === id ? { ...item, name: 'New Name' } : item);` |
+
+**Exemplo de atualização de array:**
+
+```typescript
+const originalList = ['apple', 'banana', 'cherry']
+
+// ❌ MODO MUTÁVEL (Evitar)
+// originalList.push('date');
+
+// ✅ MODO IMUTÁVEL (Adicionando)
+const newList = [...originalList, 'date']
+
+// ✅ MODO IMUTÁVEL (Removendo 'banana')
+const filteredList = originalList.filter((item) => item !== 'banana')
+
+// O array original (originalList) permanece inalterado.
+```
+
+### Imutabilidade e Angular Signals
+
+O Angular com **Signals** utiliza a reatividade baseada em valores. Para objetos e arrays, o Signal compara o valor novo com o valor antigo com base na **referência**. Se a referência não muda, o Signal assume que o valor é o mesmo e não notifica as mudanças para seus dependentes, como o `input()` de um componente filho.
+
+#### Exemplo Prático: Falha na Detecção do Input Signal
+
+Considere um componente `UserProfileComponent` que recebe os dados do usuário via `input()` e um componente pai que atualiza esse dado via um Signal.
+
+**1. Componente Filho (Recebe o Input Signal)**
+
+O componente filho só será renderizado novamente se o valor da `user()` mudar (ou seja, se a **referência** mudar).
+
+```typescript
+// user-profile.component.ts
+@Component({
+	standalone: true,
+	template: `<h1>{{ fullName() }}</h1>`
+})
+export class UserProfileComponent {
+	// Recebe o objeto do componente pai.
+	// O Angular só re-executará o computed se a REFERÊNCIA mudar.
+	user = input.required<User>()
+
+	// Exemplo de lógica que depende do input
+	protected fullName = computed(() => `User: ${this.user().name}`)
+}
+```
+
+**2. Componente Pai (Atualiza o Signal de Forma Mutável)**
+
+O componente pai muta o objeto do Signal, mas mantém a mesma referência.
+
+```typescript
+// app.component.ts
+@Component({
+	standalone: true,
+	imports: [UserProfileComponent],
+	template: `
+		<user-profile [user]="userSignal()" />
+		<button (click)="badUpdate()">Mudar Nome (Mutável/Erro)</button>
+	`
+})
+export class AppComponent {
+	// Signal que armazena o objeto (referência: A)
+	userSignal = signal<User>({ name: 'Alice', age: 30, isActive: true })
+
+	// ❌ SIMULAÇÃO DE ATUALIZAÇÃO MUTÁVEL (CAUSA FALHA NO INPUT)
+	badUpdate() {
+		const currentUser = this.userSignal() // Pega a referência A
+		currentUser.name = 'ALICE_MUTADA' // ⚠️ Muta a referência A!
+		this.userSignal.set(currentUser) // Chama set() com a mesma referência A
+
+		// O input do filho não reage, pois a referência do objeto não mudou.
+		// O Signal falha em notificar a mudança de valor.
+	}
+
+	// ✅ SIMULAÇÃO DE ATUALIZAÇÃO IMUTÁVEL (CORRETA)
+	goodUpdate() {
+		this.userSignal.update((currentUser) => ({
+			...currentUser, // Cria um NOVO objeto (referência: B)
+			name: 'Bob_IMUTÁVEL',
+			age: currentUser.age + 1
+		}))
+
+		// O input do filho reage, pois uma nova referência foi passada.
+	}
+}
+```
+
+Ao utilizar o método `badUpdate()`, o objeto dentro do Signal é alterado, mas a referência de memória que o Signal armazena permanece a mesma. Consequentemente, o `input()` do componente filho, que se baseia na comparação de referências, não detecta que houve um novo valor, e a renderização falha em atualizar.
+
+A solução é usar sempre o método **`update()`** ou **`set()`** em conjunto com o **spread operator** (`...`) ou funções de cópia, forçando a criação de uma nova referência, garantindo que a hierarquia de Signals reaja de forma correta e eficiente.
+
+### Conclusão
+
+A **imutabilidade** é mais do que um padrão de código; é um pilar de **performance** e **confiabilidade** no desenvolvimento front-end com Angular. Ao evitar a mutação direta e garantir que toda alteração de estado crie uma nova referência, eliminamos a principal causa de bugs por efeitos colaterais e ativamos otimizações de detecção de mudanças.
+
+A adoção do padrão imutável é fundamental, especialmente ao trabalhar com as novas primitivas de reatividade do framework, como os **Signals**. Uma simples checagem de referência garante que componentes reativos e `input()` signals reajam instantaneamente ao novo estado, resultando em uma aplicação mais previsível, mais fácil de manter e mais performática para o usuário final.
