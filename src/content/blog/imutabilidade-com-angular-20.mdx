@@ -92,6 +92,12 @@ const filteredList = originalList.filter((item) => item !== 'banana')
 // O array original (originalList) permanece inalterado.
 ```
 
+---
+
+<Ads />
+
+---
+
 ### Imutabilidade e Angular Signals
 
 O Angular com **Signals** utiliza a reatividade baseada em valores. Para objetos e arrays, o Signal compara o valor novo com o valor antigo com base na **referência**. Se a referência não muda, o Signal assume que o valor é o mesmo e não notifica as mudanças para seus dependentes, como o `input()` de um componente filho.
