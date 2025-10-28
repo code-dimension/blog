@@ -1,0 +1,424 @@
+---
+heroImage: /images/posts/Resource-API.jpg
+category: Angular
+description: 'Domine a Resource API do Angular para dados assíncronos reativos com Signals. Exemplos com resource, rxResource e httpResource.'
+pubDate: '2025-10-28'
+draft: false
+tags:
+  - angular
+  - signals
+title: 'Angular Resource API: Reatividade Assíncrona com Signals'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+A Resource API no Angular oferece uma maneira reativa e integrada de lidar com dados assíncronos dentro da arquitetura baseada em **Signals** do framework.
+
+Ela simplifica a incorporação de operações assíncronas, como buscas de dados em servidores, diretamente no fluxo reativo dos seus componentes e serviços.
+
+Essa API fornece funções utilitárias que transformam fontes de dados assíncronas em **Signals**, permitindo que você aproveite todo o poder da reatividade fina do Angular para manter sua UI sincronizada com os dados mais recentes, ao mesmo tempo que gerencia estados de carregamento e erro de forma declarativa.
+
+## O que é a Resource API?
+
+A Resource API é um conjunto de ferramentas dentro do Angular, projetada para integrar operações assíncronas ao sistema de **Signals**.
+
+Ela introduz o conceito de `Resource`, um tipo especial que utiliza **Signals** para gerenciar o ciclo de vida de operações assíncronas, como uma chamada HTTP.
+
+Um `Resource` rastreia o estado da operação (ocioso, carregando, resolvido, erro) e o valor resultante ou o erro ocorrido.
+
+## Para que serve?
+
+A principal finalidade da Resource API é simplificar o gerenciamento de estado assíncrono em aplicações Angular que utilizam **Signals**.
+
+Ela abstrai a complexidade de lidar manualmente com Promises ou Observables para buscar dados, fornecendo uma interface baseada em **Signals** que se integra naturalmente com `computed` e `effect`.
+
+Isso torna o código mais limpo, declarativo e fácil de manter, especialmente em cenários com múltiplas fontes de dados assíncronas dependentes.
+
+---
+
+### A função `resource()`
+
+A função `resource()` é a mais genérica da API. Ela permite criar um `Resource` a partir de qualquer operação assíncrona que retorne uma `Promise`.
+
+Você define os parâmetros de entrada de forma reativa (`params`) e fornece uma função `loader` assíncrona que executa a busca dos dados.
+
+Essa função é chamada automaticamente sempre que os parâmetros mudam.
+
+## Casos de uso para `resource()`
+
+A função `resource()` é a base da API e serve para criar um `Resource` a partir de uma operação assíncrona genérica.
+
+É ideal para buscar dados de qualquer fonte que retorne uma `Promise`, como chamadas `fetch` nativas ou funções assíncronas personalizadas.
+
+Você define os parâmetros reativamente e fornece uma função `loader` que executa a busca.
+
+```typescript
+// src/app/user-profile/fetch-user.ts
+
+// Função simulada de busca de usuário
+export async function fetchUser(params: {
+	id: string
+}): Promise<{ id: string; firstName: string }> {
+	// Em um caso real, faria uma chamada fetch
+	console.log(`Buscando usuário com id: ${params.id}`)
+	await new Promise((resolve) => setTimeout(resolve, 1000)) // Simula latência
+
+	if (params.id === 'error') {
+		throw new Error('Usuário não encontrado')
+	}
+
+	return { id: params.id, firstName: `Nome_${params.id}` }
+}
+```
+
+```typescript
+// src/app/user-profile/user-profile.component.ts
+
+import { Component, computed, inject, input } from '@angular/core'
+import { resource } from '@angular/core'
+import { fetchUser } from './fetch-user' // Importa a função de busca
+
+@Component({
+	selector: 'app-user-profile',
+	template: `
+		<div>
+			<h2>Perfil do Usuário</h2>
+
+			@switch (userResourceRef.status()) {
+				@case ('pending') {
+					<p>Carregando perfil...</p>
+				}
+
+				@case ('resolved') {
+					<p>Nome: {{ firstName() }}</p>
+				}
+
+				@case ('error') {
+					<p>Erro ao carregar: {{ userResourceRef.error()?.message }}</p>
+				}
+			}
+
+			<button (click)="userResourceRef.reload()">Recarregar</button>
+		</div>
+	`
+})
+export class UserProfileComponent {
+	// Input reativo para o ID do usuário
+	userId = input<string>('123')
+
+	// Cria o resource
+	userResourceRef = resource({
+		// Parâmetros reativos: o loader será chamado sempre que userId() mudar
+		params: () => ({ id: this.userId() }),
+
+		// Função assíncrona para carregar os dados
+		loader: async ({ params, abortSignal }) => {
+			// Idealmente, a função fetchUser aceitaria um AbortSignal
+			return fetchUser(params)
+		}
+	})
+
+	// Signal computado derivado do valor do resource
+	firstName = computed(() => {
+		// hasValue() garante que o valor existe e não houve erro
+		if (this.userResourceRef.hasValue()) {
+			return this.userResourceRef.value().firstName
+		}
+		return 'Nome não disponível' // Fallback
+	})
+}
+```
+
+---
+
+### A função `rxResource()`
+
+A função `rxResource()` é uma variação da `resource()` especificamente adaptada para trabalhar com fontes de dados que são RxJS `Observables`.
+
+Em vez de uma função `loader` que retorna uma `Promise`, você fornece uma função `stream` que retorna um `Observable`. Isso facilita a integração com serviços ou lógicas existentes que já utilizam RxJS.
+
+## Casos de uso para `rxResource()`
+
+A função `rxResource()` é projetada especificamente para cenários onde a fonte de dados assíncrona é um RxJS `Observable`.
+
+Em vez de uma função `loader` que retorna uma `Promise`, você fornece uma função `stream` que retorna um `Observable`. Isso permite integrar fluxos de dados reativos existentes baseados em RxJS com a Resource API.
+
+```typescript
+// src/app/product.service.ts
+
+import { Injectable } from '@angular/core'
+import { Observable, timer } from 'rxjs'
+import { map } from 'rxjs/operators'
+
+@Injectable({
+	provideIn: 'root'
+})
+export class ProductService {
+	getProduct(id: string): Observable<{ id: string; name: string }> {
+		console.log(`Buscando produto (Observable) com id: ${id}`)
+		return timer(1000).pipe(map(() => ({ id: id, name: `Produto_${id}` })))
+	}
+}
+```
+
+```typescript
+// src/app/product-details/product-details.component.ts
+
+import { Component, computed, inject, input } from '@angular/core'
+import { rxResource } from '@angular/core/rxjs-interop'
+import { ProductService } from '../product.service' // Importa o serviço
+
+@Component({
+	selector: 'app-product-details',
+	template: `
+		<div>
+			<h2>Detalhes do Produto</h2>
+
+			@switch (productResourceRef.status()) {
+				@case ('pending') {
+					<p>Carregando produto...</p>
+				}
+
+				@case ('resolved') {
+					<p>Nome: {{ productName() }}</p>
+				}
+
+				@case ('error') {
+					<p>Erro ao carregar produto.</p>
+				}
+			}
+		</div>
+	`
+})
+export class ProductDetailsComponent {
+	private productService = inject(ProductService)
+
+	productId = input<string>('abc')
+
+	// Cria o resource a partir de um Observable
+	productResourceRef = rxResource({
+		// Parâmetros reativos
+		params: () => ({ id: this.productId() }),
+
+		// Função que retorna um Observable vindo do serviço
+		stream: ({ params }) => this.productService.getProduct(params.id)
+	})
+
+	// Signal computado derivado do valor
+	productName = computed(() => {
+		if (this.productResourceRef.hasValue()) {
+			return this.productResourceRef.value().name
+		}
+		return 'Produto não disponível'
+	})
+}
+```
+
+---
+
+### A função `httpResource()`
+
+A função `httpResource()` é um wrapper reativo em torno do `HttpClient`. Ela fornece o status da requisição e a resposta como **Signals**.
+
+Diferente do `HttpClient` tradicional que retorna `Observables` (lazy), `httpResource` inicia a requisição HTTP **imediatamente** (eagerly) e a refaz automaticamente sempre que um **Signal** do qual ela depende (como um parâmetro na URL) muda.
+
+Se uma requisição estiver pendente quando um **Signal** muda, a requisição pendente é cancelada antes de iniciar a nova.
+
+## Casos de uso para `httpResource()`
+
+`httpResource` simplifica a busca de dados via HTTP em cenários reativos com **Signals**.
+Você pode passar uma função reativa que retorna a URL ou um objeto de configuração de requisição mais complexo, similar ao `HttpClient`.
+
+É ideal para buscar dados (GET) que precisam ser atualizados na UI sempre que um parâmetro (vindo de um input, `Signal`, etc.) muda.
+
+```typescript
+// src/app/character-viewer/character-viewer.component.ts
+
+import { Component, computed, inject, input, Signal, signal } from '@angular/core'
+import { httpResource } from '@angular/common/http'
+import { FormsModule } from '@angular/forms'
+
+// Interface para a resposta da API (exemplo Star Wars API)
+interface StarWarsPerson {
+	name: string
+	height: string
+	// ... outros campos
+}
+
+@Component({
+	selector: 'app-character-viewer',
+	standalone: true,
+	imports: [FormsModule],
+	template: `
+		<div>
+			<h2>Personagem Star Wars</h2>
+
+			<div>
+				<label>ID do Personagem: </label>
+				<input type="number" [(ngModel)]="id" min="1" />
+			</div>
+
+			@switch (swPersonResourceRef.status()) {
+				@case ('pending') {
+					<p>Carregando personagem...</p>
+				}
+				@case ('resolved') {
+					@if (swPersonResourceRef.hasValue()) {
+						<p>Nome: {{ characterName() }}</p>
+						<p>Altura: {{ characterHeight() }}</p>
+					}
+				}
+				@case ('error') {
+					<p>Erro ao carregar personagem (ID: {{ id() }}).</p>
+				}
+				@default {
+					<p>Aguardando ID...</p>
+				}
+			}
+
+			<button (click)="swPersonResourceRef.reload()">Recarregar Personagem</button>
+		</div>
+	`
+})
+export class CharacterViewer {
+	id = signal<string>('1') // ID do personagem como Signal
+
+	// Cria o resource usando httpResource com URL reativa
+	swPersonResourceRef = httpResource<StarWarsPerson>( // Define o tipo esperado para o *valor* da resposta
+		() => `https://swapi.dev/api/people/${this.id()}/` // A URL é uma função que lê o Signal 'id'
+	)
+
+	// Signals computados derivados do valor
+	characterName = computed(() => this.swPersonResourceRef()?.value?.name ?? 'N/A')
+	characterHeight = computed(() => this.swPersonResourceRef()?.value?.height ?? 'N/A')
+}
+```
+
+---
+
+<Ads />
+
+---
+
+## Encapsulando Resources em Serviços
+
+Embora você possa criar `Resource`s diretamente nos componentes, uma prática recomendada para melhor organização, reusabilidade e testabilidade é encapsular a lógica de _criação_ do `Resource` dentro de um método de um serviço injetável.
+
+O serviço pode ter um método que aceita os parâmetros necessários (incluindo **Signals**, se a reatividade for desejada a partir do componente) e retorna a instância da `Resource`.
+O componente então chama esse método, armazena a referência da `Resource` retornada (vamos chamá-la `userResourceRef`) e a utiliza diretamente no template ou em `computed`/`effect`.
+
+```typescript
+// src/app/user.service.ts
+
+import { Injectable, inject, Signal } from '@angular/core'
+import { httpResource } from '@angular/common/http'
+
+interface User {
+	id: string
+	name: string
+	email: string
+}
+
+@Injectable({
+	providedIn: 'root'
+})
+export class UserService {
+	getUserResource(userIdSignal: Signal<string | undefined>) {
+		// Cria e retorna o httpResource diretamente
+		return httpResource<User>(() => {
+			const id = userIdSignal()
+			// Só retorna a URL se houver um ID, senão httpResource fica 'idle'
+			return id ? `/api/users/${id}` : undefined
+		})
+	}
+}
+```
+
+```typescript
+// src/app/user-view/user-view.component.ts
+
+import { Component, inject, signal } from '@angular/core'
+import { UserService } from '../user.service'
+import { FormsModule } from '@angular/forms'
+
+@Component({
+	selector: 'app-user-view',
+	imports: [FormsModule],
+	standalone: true,
+	template: `
+		<div>
+			<h3>Visualizar Usuário</h3>
+
+			<input placeholder="ID do Usuário" [(ngModel)]="userId" />
+
+			<button
+				(click)="userResourceRef.reload()"
+				[disabled]="userResourceRef.status() === 'pending'"
+			>
+				Recarregar
+			</button>
+
+			@switch (userResourceRef.status()) {
+				@case ('pending') {
+					<p>Carregando...</p>
+				}
+
+				@case ('resolved') {
+					@if (userResourceRef.hasValue()) {
+						<p>Nome: {{ userResourceRef.value()?.name }}</p>
+						<p>Email: {{ userResourceRef.value()?.email }}</p>
+					} @else {
+						<p>Usuário carregado, mas sem dados.</p>
+					}
+				}
+
+				@case ('error') {
+					<p>Erro: {{ userResourceRef.error()?.message ?? 'Erro desconhecido' }}</p>
+				}
+
+				@default {
+					<p>Insira um ID.</p>
+				}
+			}
+		</div>
+	`
+})
+export class UserViewComponent {
+	// Injeta o serviço
+	private userService = inject(UserService)
+
+	// Signal no componente para controlar o ID
+	userId = signal<string | undefined>(undefined)
+
+	userResourceRef = this.userService.getUserResource(this.userId)
+}
+```
+
+---
+
+## ⚠️ Cuidado: Use a Resource API Apenas para Leitura
+
+É crucial entender que a Resource API, incluindo `httpResource`, em seu estado atual, é projetada primariamente para **operações de leitura** de dados (GET requests).
+
+Tentar usá-la para operações de escrita (como POST, PUT, DELETE) pode levar a comportamentos inesperados.
+A natureza reativa da API significa que se os **Signals** dos quais ela depende mudarem enquanto uma operação de escrita estiver pendente,
+o `Resource` pode cancelar a requisição anterior para iniciar uma nova. Isso é geralmente indesejável para mutações, onde você quer garantir que a operação seja concluída.
+
+Para operações de escrita, continue utilizando chamadas diretas ao `HttpClient` (ou métodos encapsulados em serviços) e gerenciando o estado de carregamento/erro manualmente ou com outras bibliotecas de gerenciamento de estado.
+
+---
+
+## Conclusão
+
+A Resource API do Angular representa um avanço significativo na forma como lidamos com dados assíncronos em aplicações baseadas em **Signals**.
+
+Funções como `resource()`, `rxResource()`, e especialmente `httpResource()` oferecem abstrações poderosas para buscar e sincronizar dados de diversas fontes, gerenciando estados de carregamento e erro de forma reativa e declarativa.
+
+Ao encapsular a _criação_ dessas `Resource`s em métodos de serviço, promovemos uma arquitetura mais limpa e manutenível, permitindo que os componentes solicitem e
+utilizem essas `Resource`s reativas conforme necessário.
+
+É importante, no entanto, lembrar que seu uso ideal é para leitura de dados (GET), evitando operações de escrita (POST, PUT, DELETE) devido ao seu comportamento de cancelamento reativo.
+
+A adoção dessa API pode simplificar muito o código assíncrono e melhorar a integração com o ecossistema de **Signals** do Angular.
