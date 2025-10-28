@@ -1,0 +1,155 @@
+---
+heroImage: /images/posts/Model-Input.jpg
+category: Angular
+description: 'Descubra o model() input no Angular para facilitar o two-way data binding. Crie componentes interativos com código limpo e reativo usando signals.'
+pubDate: '2025-10-28'
+draft: false
+tags:
+  - angular
+  - signals
+title: 'Angular Model Input: Two-Way Data Binding Fácil'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+O Angular oferece uma forma poderosa e flexível de gerenciar o estado e a comunicação entre componentes. Uma das funcionalidades mais recentes e úteis nesse quesito é o `model()`, também conhecido como "Model Input".
+
+Ele simplifica a criação de componentes que suportam two-way data binding (ligação de dados bidirecional), tornando o código mais limpo e fácil de entender.
+
+Com o `model()`, componentes filhos podem não apenas receber dados do componente pai, mas também notificar o pai sobre mudanças internas, mantendo ambos sincronizados.
+
+Isso é especialmente útil na criação de componentes de formulário personalizados, onde o estado interno do componente precisa ser refletido no modelo de dados do componente pai e vice-versa.
+
+## O que é `model()`?
+
+O `model()` é uma função do Angular que cria um tipo especial de signal de entrada (`input signal`) projetado especificamente para habilitar o two-way data binding em um componente.
+
+Ao contrário do `input()` padrão, que é somente leitura dentro do componente que o declara, um `model()` input permite que o próprio componente atualize seu valor internamente.
+
+Quando o valor de um `model()` input é atualizado dentro do componente (usando os métodos `set` ou `update`), essa mudança pode ser automaticamente propagada de volta para o componente pai que está utilizando a sintaxe de two-way binding.
+
+Isso cria uma sincronização bidirecional entre o estado do componente pai e o estado do componente filho.
+
+## Para que serve o `model()`?
+
+O principal propósito do `model()` é facilitar a criação de componentes que precisam gerenciar um estado interno que também pode ser controlado ou observado pelo componente pai.
+
+Ele permite que um componente filho "emita" mudanças de valor de volta para o pai sem a necessidade de declarar explicitamente um `output` e um evento correspondente.
+
+Isso é particularmente útil para componentes de UI reutilizáveis, especialmente campos de formulário personalizados.
+
+Imagine um componente de slider customizado: ele precisa receber um valor inicial do pai, mas também precisa informar ao pai quando o usuário move o slider, atualizando o valor. O `model()` simplifica exatamente esse cenário.
+
+## O que é Two-Way Data Binding?
+
+Two-way data binding (ligação de dados bidirecional) é um padrão onde a interface do usuário (view) e o modelo de dados (componente) são mantidos sincronizados automaticamente. Mudanças na view atualizam o modelo, e mudanças no modelo atualizam a view.
+
+No Angular, a sintaxe `[(...)]`, carinhosamente chamada de "banana-in-a-box", é usada para two-way data binding. Por baixo dos panos, ela é uma combinação de uma ligação de propriedade (`[...]`, do pai para o filho) e uma ligação de evento (`(...)`, do filho para o pai).
+
+O `model()` input simplifica a implementação desse padrão. Ao declarar um `model()` input (por exemplo, `value = model(0)`), o Angular automaticamente cria um `output` correspondente com o sufixo `Change` (neste caso, `valueChange`). A sintaxe `[(value)]="..."` no componente pai se liga à propriedade `value` (para entrada) e ao evento `valueChange` (para saída), criando a ligação bidirecional.
+
+<Ads />
+
+## Como usar `model()`
+
+Usar o `model()` é bastante simples. Veja um exemplo de um componente filho (`custom-counter`) e como usá-lo em um componente pai:
+
+**Componente Filho (`custom-counter.component.ts`)**
+
+```typescript
+import { Component, model } from '@angular/core'
+
+@Component({
+	selector: 'app-custom-counter',
+	template: `
+		<button (click)="decrement()">-</button>
+		<span>{{ count() }}</span>
+		<button (click)="increment()">+</button>
+	`
+})
+export class CustomCounterComponent {
+	// Declara um model input chamado 'count' com valor inicial 0
+	count = model(0)
+
+	increment() {
+		// Atualiza o valor do model input internamente
+		this.count.update((value) => value + 1)
+	}
+
+	decrement() {
+		this.count.update((value) => value - 1)
+	}
+}
+```
+
+**Componente Pai (`app.component.ts`)**
+
+```typescript
+import { Component, signal } from '@angular/core'
+import { CustomCounterComponent } from './custom-counter.component'
+
+@Component({
+	selector: 'app-root',
+	imports: [CustomCounterComponent],
+	template: `
+		<h1>Contador Pai: {{ parentCount() }}</h1>
+		<app-custom-counter [(count)]="parentCount" />
+	`
+})
+export class AppComponent {
+	// signal no componente pai para armazenar o valor
+	parentCount = signal(5)
+}
+```
+
+Neste exemplo:
+
+1.  O `CustomCounterComponent` declara `count = model(0)`.
+2.  O `AppComponent` usa `<app-custom-counter [(count)]="parentCount" />` para ligar o `count` do filho ao `parentCount` do pai.
+3.  Quando os botões no `CustomCounterComponent` são clicados, `this.count.update()` é chamado, modificando o valor interno.
+4.  Essa mudança é automaticamente propagada para `parentCount` no `AppComponent` devido à ligação `[(count)]`.
+5.  Se `parentCount` fosse alterado programaticamente no `AppComponent`, o valor seria refletido no `CustomCounterComponent`.
+
+## Como usar `model.required()`
+
+Assim como o `input()`, você pode marcar um `model()` input como obrigatório usando `model.required()`. Isso garante que o componente pai **deve** fornecer um valor para essa entrada ao usar o componente.
+
+```typescript
+import { Component, model } from '@angular/core'
+
+@Component({
+	selector: 'app-required-input',
+	template: `Valor: {{ requiredValue() }}`
+})
+export class RequiredInputComponent {
+	// Declara um model input obrigatório do tipo string
+	requiredValue = model.required<string>()
+}
+```
+
+Se o componente pai tentar usar `<app-required-input />` sem a model input `[(requiredValue)]`, o Angular acusará um erro em tempo de compilação, ajudando a prevenir bugs.
+
+```typescript
+import { Component, signal } from '@angular/core'
+import { RequiredInputComponent } from './required-input.component'
+
+@Component({
+	selector: 'app-root',
+	imports: [RequiredInputComponent],
+	template: ` <app-required-input [(requiredValue)]="appValue" /> `
+})
+export class AppComponent {
+	appValue = signal('Valor inicial')
+}
+```
+
+## Conclusão
+
+O `model()` input é uma adição valiosa ao conjunto de ferramentas do Angular, simplificando significativamente a implementação de two-way data binding.
+
+Ele reduz a verbosidade do código ao eliminar a necessidade de gerenciar manualmente `output` para propagar mudanças de volta ao componente pai.
+
+Ao adotar o `model()`, especialmente na criação de componentes de formulário customizados e outros componentes interativos reutilizáveis,
+você pode escrever um código mais limpo, mais declarativo e fácil de manter, aproveitando ao máximo o sistema de reatividade baseado em signals do Angular.
