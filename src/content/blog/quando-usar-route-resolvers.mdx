@@ -1,0 +1,231 @@
+---
+heroImage: /images/posts/Quando-usar-Route-Resolvers.jpg
+category: Angular
+description: 'Análise sobre usar Route Resolvers ou carregar dados no componente (ngOnInit, httpResource) no Angular. Entenda o impacto na UX e performance.'
+pubDate: '2025-11-10'
+draft: false
+tags:
+  - angular
+title: 'Angular: Quando usar Route Resolvers?'
+authorId: 'henrique-custodia'
+---
+
+import EmbedYtVideo from '@embed-yt-video'
+import Ads from '@ads'
+
+Ao construir aplicações Angular, uma das primeiras decisões de arquitetura que enfrentamos é como carregar os dados necessários para uma nova página.
+
+Quando um usuário navega para `/product/123`, precisamos buscar as informações desse produto.
+
+A abordagem tradicional para isso era usar um **Route Resolver**, garantindo que os dados estivessem prontos _antes_ da página ser exibida.
+
+No entanto, essa abordagem tem um custo significativo: ela bloqueia a navegação. Se a API demorar, o usuário fica preso na página anterior, criando uma péssima experiência.
+
+Hoje, com **Signals** e padrões de carregamento mais modernos, é crucial reavaliar se os Resolvers ainda são a melhor opção, ou se alternativas não-bloqueantes são superiores.
+
+## O que é um Route Resolver?
+
+Um Route Resolver é uma funcionalidade do Angular Router que atua como um "guarda" antes da ativação de uma rota.
+
+Quando um usuário tenta navegar para uma página protegida por um resolver, o Angular executa a lógica do resolver primeiro.
+
+Ele aguarda a conclusão dessa lógica (geralmente uma requisição HTTP) e só então ativa a rota e instancia o componente.
+
+Os dados resolvidos são disponibilizados para o componente, seja através do `ActivatedRoute` ou, em abordagens modernas, injetados diretamente em um `input()` do componente (usando `withComponentInputBinding`).
+
+## O "Custo" do Resolver: Por que ele é controverso?
+
+A principal desvantagem do Resolver é que ele **bloqueia a transição de rota**.
+
+O bloqueio da navegação _sem um feedback_ claro é o que cria uma péssima experiência do usuário (UX). Em um mundo ideal, a navegação deve parecer instantânea.
+
+Para que o carregamento não prejudique a UX, o usuário precisa de um feedback.
+
+Ao usar Resolvers, uma boa prática é fornecer um feedback global imediato (como um loader no topo da página, usando `ngx-progressbar`, por exemplo) para indicar que a próxima página está sendo preparada.
+
+Contudo, essa abordagem só é aceitável se o endpoint for rápido (abaixo de 500ms).
+
+Se o carregamento for lento (\>500ms), o ideal é abandonar o Resolver e mover o feedback para _dentro_ da nova página (com loaders ou skeletons), permitindo que a navegação ocorra imediatamente.
+
+## Alternativas Não-Bloqueantes (Recomendadas)
+
+Se o Resolver não é ideal, como devemos carregar os dados? A resposta é: **de forma não-bloqueante**.
+
+O componente deve ser exibido imediatamente, e _ele_ deve ser responsável por mostrar um estado de carregamento enquanto busca os dados.
+
+Existem algumas formas populares de implementar isso:
+
+### 1\. Carregamento no `ngOnInit` (A Abordagem Clássica)
+
+Essa é a abordagem mais comum e robusta. O `ngOnInit` é um _lifecycle hook_ executado logo após o componente ser instanciado.
+
+Ao carregar dados no `ngOnInit`, a rota é ativada imediatamente e o componente é renderizado. Isso permite exibir _placeholders_, como _loaders_ (indicadores de carregamento) ou _skeletons_ (esqueletos de layout), enquanto os dados estão sendo buscados.
+
+```typescript
+// product-detail.component.ts
+import { Component, inject, input, signal, OnInit, ChangeDetectionStrategy } from '@angular/core'
+import { ProductService } from './product.service'
+import { Product } from './product.model'
+
+@Component({
+	selector: 'app-product-detail',
+	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	template: `
+		@if (isLoading()) {
+			<p>Carregando...</p>
+		} @else {
+			<h1>{{ product()!.name }}</h1>
+		}
+	`
+})
+export class ProductDetailComponent implements OnInit {
+	productService = inject(ProductService)
+
+	// O ID vem da rota (ex: /product/123)
+	id = input.required<string>()
+
+	product = signal<Product | null>(null)
+	isLoading = signal(true)
+
+	ngOnInit(): void {
+		// A busca de dados começa APÓS o componente renderizar
+		this.productService.getProduct(this.id()).subscribe((data) => {
+			this.product.set(data)
+			this.isLoading.set(false)
+		})
+	}
+}
+```
+
+### 2\. Carregamento direto na Propriedade (Signals ou Observables)
+
+Com as práticas modernas do Angular, você pode carregar os dados diretamente na declaração da propriedade, usando Observables (com `AsyncPipe`) ou **Signals**.
+
+**Com Observables (Abordagem Reativa):**
+
+Esta é a abordagem mais moderna e robusta para Observables, pois reage a mudanças no `id` (Signal) sem precisar do `ngOnInit`.
+
+```typescript
+// product-detail.component.ts
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core'
+import { CommonModule } from '@angular/common' // Necessário para AsyncPipe
+import { ProductService } from './product.service'
+import { Product } from './product.model'
+import { Observable } from 'rxjs'
+import { toObservable } from '@angular/core/rxjs-interop' // Importar
+import { switchMap } from 'rxjs/operators' // Importar
+
+@Component({
+	selector: 'app-product-detail',
+	standalone: true,
+	imports: [CommonModule], // Importa CommonModule para o AsyncPipe
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	template: `
+		@if (product$ | async; as product) {
+			<h1>{{ product.name }}</h1>
+		} @else {
+			<p>Carregando...</p>
+		}
+	`
+})
+export class ProductDetailComponent {
+	productService = inject(ProductService)
+
+	// O ID vem da rota (ex: /product/123)
+	id = input.required<string>()
+
+	// Abordagem totalmente reativa:
+	// 1. Converte o Signal 'id' em um Observable
+	// 2. Usa 'switchMap' para fazer a chamada de serviço sempre que o 'id' mudar
+	product$: Observable<Product> = toObservable(this.id).pipe(
+		switchMap((id) => this.productService.getProduct(id))
+	)
+}
+```
+
+**Com Signals (ex: usando `httpResource`):**
+
+A API `httpResource` (experimental) é projetada exatamente para isso. Ela encapsula a requisição HTTP e expõe o estado de carregamento (`isLoading`), erro (`error`) e o valor (`value`) como **Signals**.
+
+Isso elimina a necessidade de gerenciar `ngOnInit` ou múltiplos Signals de estado manualmente.
+
+```typescript
+// src/app/simple-profile/simple-profile.component.ts
+
+import { Component, ChangeDetectionStrategy } from '@angular/core'
+import { httpResource } from '@angular/common/http'
+// (Lembre-se de adicionar 'provideHttpClient()' em seu app.config.ts)
+
+// 1. Interface simples para os dados
+interface User {
+	name: string
+	email: string
+}
+
+@Component({
+	selector: 'app-simple-profile',
+	standalone: true,
+	imports: [],
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	template: `
+		<div>
+			<h3>Perfil do Usuário</h3>
+
+			@if (userResource.isLoading()) {
+				<p>Carregando perfil...</p>
+			}
+
+			@if (userResource.hasValue()) {
+				<div>
+					<p><strong>Nome:</strong> {{ userResource.value()!.name }}</p>
+					<p><strong>Email:</strong> {{ userResource.value()!.email }}</p>
+				</div>
+			}
+
+			@if (userResource.error()) {
+				<p>Falha ao carregar o perfil.</p>
+			}
+		</div>
+	`
+})
+export class SimpleProfileComponent {
+	// 1. Carregar o dado
+	// 'httpResource' é chamado com uma URL estática.
+	// Ele faz a requisição assim que o componente é criado.
+	// O resultado (estado) é armazenado como um Signal.
+	userResource = httpResource<User>('https://jsonplaceholder.typicode.com/users/1')
+}
+```
+
+Independentemente da implementação (ngOnInit, AsyncPipe ou `httpResource`), o princípio é o mesmo: **não bloquear a navegação**.
+
+<Ads />
+
+## Afinal, ainda vale a pena usar Resolvers?
+
+Sim, mas em casos específicos, e **sempre** priorizando o feedback ao usuário.
+
+A principal vantagem de um Resolver é que os dados estão prontos para uso _antes_ que o componente seja instanciado. A decisão de usá-lo deve se basear nestas condições:
+
+1.  O endpoint é **extremamente rápido** (idealmente \< 500ms, talvez um cache).
+2.  Você fornece um **feedback de carregamento global** (como `ngx-progressbar`) para que o usuário saiba que a navegação está em andamento, mesmo que seja rápida.
+3.  O design do seu componente se beneficia por ter 100% dos dados disponíveis no momento da renderização, e a breve espera pelo carregamento (com feedback global) é preferível a exibir a página com _skeletons_ ou _loaders_ internos.
+
+Para 90% dos outros casos de uso, especialmente com endpoints de performance incerta, a experiência do usuário é muito superior com a abordagem não-bloqueante (carregamento dentro do componente).
+
+A percepção de velocidade é mais importante que o tempo real de carregamento.
+
+## Conclusão
+
+Em resumo, a decisão de usar Route Resolvers depende diretamente da performance do seu backend.
+
+Para criar uma boa UX, essa abordagem exige que o endpoint seja extremamente rápido (idealmente, menos de 500ms).
+Mesmo em cenários rápidos, é sempre recomendável fornecer um feedback visual ao usuário, como um loader global (ex: `ngx-progressbar`), para que ele saiba que a navegação está em progresso.
+
+Se o seu endpoint for lento, evite Resolvers.
+A melhor estratégia é permitir a navegação imediata e lidar com o carregamento _dentro_ do componente.
+Ao fazer isso, forneça feedbacks visuais claros (como _loaders_ ou _skeletons_) no local onde os dados irão aparecer.
+
+Além disso, se possível, fragmente chamadas HTTP grandes e lentas em endpoints menores e mais rápidos.
+Isso permite que a UI seja atualizada dinamicamente à medida que os dados chegam, evitando que o usuário tenha que esperar vários segundos por uma única resposta.
